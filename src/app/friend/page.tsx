@@ -10,18 +10,17 @@ type User = {
     username?: string | null;
 };
 
-type Friendship = {
+type FriendshipInvitation = {
     id: string;
     user: User;
     friend: User;
     status: string;
 };
 
-
 export default function FriendsPage() {
     const { getToken } = useAuth();
-    const [pendingInvitations, setPendingInvitations] = useState<Friendship[]>([]);
-    const [friends, setFriends] = useState<Friendship[]>([]);
+    const [pendingInvitations, setPendingInvitations] = useState<FriendshipInvitation[]>([]);
+    const [friends, setFriends] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -45,8 +44,8 @@ export default function FriendsPage() {
                 throw new Error('Erreur lors du chargement');
             }
 
-            const pendData: Friendship[] = await pendRes.json();
-            const friendsData: Friendship[] = await friendsRes.json();
+            const pendData: FriendshipInvitation[] = await pendRes.json();
+            const friendsData: User[] = await friendsRes.json();
 
             setPendingInvitations(pendData);
             setFriends(friendsData);
@@ -73,9 +72,11 @@ export default function FriendsPage() {
                 },
                 body: JSON.stringify({ status }),
             });
+
             if (!res.ok) {
                 throw new Error('Erreur lors de la réponse');
             }
+
             fetchData();
         } catch (err) {
             alert('Erreur: ' + (err as Error).message);
@@ -94,6 +95,7 @@ export default function FriendsPage() {
                 <p className="text-red-600">{error}</p>
             ) : (
                 <>
+                    {/* Invitations reçues */}
                     <section className="mb-10">
                         <h2 className="text-xl font-semibold mb-4">Invitations reçues</h2>
                         {pendingInvitations.length === 0 && <p>Aucune invitation en attente.</p>}
@@ -123,15 +125,21 @@ export default function FriendsPage() {
                         </ul>
                     </section>
 
+                    {/* Liste des amis */}
                     <section>
                         <h2 className="text-xl font-semibold mb-4">Amis</h2>
                         {friends.length === 0 ? (
                             <p>Vous n’avez pas encore d’amis.</p>
                         ) : (
                             <ul>
-                                {friends.map(({ id, friend }) => (
-                                    <li key={id} className="border rounded p-3 mb-2 bg-white">
-                                        {friend?.name ?? friend?.clerkId ?? 'utilisateur inconnu'}
+                                {friends.map((friend) => (
+                                    <li
+                                        key={friend.clerkId}
+                                        className="border rounded p-3 mb-2 bg-white"
+                                    >
+                                        {friend.name && friend.name.trim() !== ''
+                                            ? friend.name
+                                            : friend.username ?? friend.clerkId}
                                     </li>
                                 ))}
                             </ul>
