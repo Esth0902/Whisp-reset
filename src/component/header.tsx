@@ -1,18 +1,29 @@
 'use client';
 
 import React, { useState } from 'react';
-import { UserButton, useUser } from '@clerk/nextjs';
+import { UserButton, useUser, useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import LogoutButton from '@/component/logout';
+import NotificationBell from '@/component/notification-bell';
+import { useNotificationStore } from '@/store/notification-store';
+import { useRealtime } from '@/hooks/useRealtime';
 
 export default function Header() {
     const { isSignedIn } = useUser();
+    const { userId } = useAuth();
     const [menuOpen, setMenuOpen] = useState(false);
     const pathname = usePathname();
 
-    // fonction utilitaire pour appliquer un style actif
+    // 🔔 State global (Zustand)
+    const notifications = useNotificationStore((s) => s.notifications);
+    const clearNotifications = useNotificationStore((s) => s.clearNotifications);
+
+    // 🔌 connexion temps réel (une fois au niveau du header pour toute l'app)
+    useRealtime(userId ?? undefined);
+
+    // lien actif
     const linkClass = (path: string) =>
         `font-medium transition-colors ${
             pathname === path ? 'text-indigo-400 underline' : 'hover:text-gray-400'
@@ -36,6 +47,14 @@ export default function Header() {
                     <Link href="/profile" className={linkClass('/profile')}>
                         Profil
                     </Link>
+
+                    {/* 🔔 Cloche persistante */}
+                    <NotificationBell
+                        count={notifications.length}
+                        notifications={notifications}
+                        onClear={clearNotifications}
+                    />
+
                     <UserButton />
                     <LogoutButton />
                 </nav>
@@ -67,20 +86,6 @@ export default function Header() {
                         {isSignedIn ? (
                             <>
                                 <Link
-                                    href="/utilisateur"
-                                    className={linkClass('/utilisateur')}
-                                    onClick={() => setMenuOpen(false)}
-                                >
-                                    Utilisateur
-                                </Link>
-                                <Link
-                                    href="/messagerie"
-                                    className={linkClass('/messagerie')}
-                                    onClick={() => setMenuOpen(false)}
-                                >
-                                    Messagerie
-                                </Link>
-                                <Link
                                     href="/friend"
                                     className={linkClass('/friend')}
                                     onClick={() => setMenuOpen(false)}
@@ -94,6 +99,14 @@ export default function Header() {
                                 >
                                     Profil
                                 </Link>
+
+                                {/* 🔔 Cloche aussi en mobile */}
+                                <NotificationBell
+                                    count={notifications.length}
+                                    notifications={notifications}
+                                    onClear={clearNotifications}
+                                />
+
                                 <UserButton />
                                 <LogoutButton />
                             </>

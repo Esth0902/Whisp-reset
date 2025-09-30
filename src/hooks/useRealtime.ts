@@ -2,61 +2,45 @@
 
 import { useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
-import toast from 'react-hot-toast';
+import { useNotificationStore } from '@/store/notification-store';
 
 let socket: Socket | null = null;
 
-type InvitationPayload = {
-    id: string;
-    from: string;
-};
+export function useRealtime(clerkId?: string) {
+    const addNotification = useNotificationStore((state) => state.addNotification);
 
-type ResponsePayload = {
-    id: string;
-    status: 'accepted' | 'declined';
-    by: string;
-};
-
-type RealtimeCallbacks = {
-    onInvitation?: (data: InvitationPayload) => void;
-    onResponse?: (data: ResponsePayload) => void;
-};
-
-export function useRealtime(clerkId?: string, callbacks?: RealtimeCallbacks) {
     useEffect(() => {
         if (!clerkId) return;
 
         if (!socket) {
-            socket = io('http://localhost:4000', {
+            socket = io(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000', {
                 auth: { clerkId },
             });
 
-            socket.on('connect', () => {
-                console.log('✅ Connecté au serveur temps réel');
-            });
+            socket.on('connect', () => console.log('✅ Connecté au serveur temps réel'));
+            socket.on('disconnect', () => console.log('❌ Déconnecté du serveur temps réel'));
 
-            socket.on('disconnect', () => {
-                console.log('❌ Déconnecté du serveur temps réel');
-            });
-
-            // 🔔 Invitation reçue
-            socket.on('friendship.requested', (data: InvitationPayload) => {
+            // Invitation reçue
+            socket.on('friendship.requested', (data) => {
                 console.log('📩 Invitation reçue', data);
-                if (callbacks?.onInvitation) callbacks.onInvitation(data);
-                else toast(`📩 Nouvelle invitation de ${data.from}`);
+                addNotification({
+                    id: data.id,
+                    message: `📩 Nouvelle invitation de ${data.from}`,
+                    type: 'invitation',
+                });
             });
 
-            // 🎉 Réponse à ma demande
-            socket.on('friendship.responded', (data: ResponsePayload) => {
+            // Réponse à une invitation
+            socket.on('friendship.responded', (data) => {
                 console.log('🎉 Réponse reçue', data);
-                if (callbacks?.onResponse) callbacks.onResponse(data);
-                else {
-                    if (data.status === 'accepted') {
-                        toast.success(`${data.by} a accepté votre invitation 🎉`);
-                    } else {
-                        toast.error(`${data.by} a refusé votre invitation ❌`);
-                    }
-                }
+                addNotification({
+                    id: data.id,
+                    message:
+                        data.status === 'accepted'
+                            ? `🎉 ${data.by} a accepté ton invitation`
+                            : `❌ ${data.by} a refusé ton invitation`,
+                    type: 'response',
+                });
             });
         }
 
@@ -64,5 +48,5 @@ export function useRealtime(clerkId?: string, callbacks?: RealtimeCallbacks) {
             socket?.disconnect();
             socket = null;
         };
-    }, [clerkId, callbacks]);
+    }, [clerkId, addNotification]);
 }
