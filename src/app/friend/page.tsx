@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import FriendInvitationForm from '@/component/friendinvitationform';
 import { useAuth } from '@clerk/nextjs';
+import { useRealtime } from '@/hooks/useRealtime';
+import toast from 'react-hot-toast';
 
 type User = {
     clerkId: string;
@@ -18,7 +20,7 @@ type FriendshipInvitation = {
 };
 
 export default function FriendsPage() {
-    const { getToken } = useAuth();
+    const { getToken, userId } = useAuth();
     const [pendingInvitations, setPendingInvitations] = useState<FriendshipInvitation[]>([]);
     const [friends, setFriends] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
@@ -79,9 +81,25 @@ export default function FriendsPage() {
 
             fetchData();
         } catch (err) {
-            alert('Erreur: ' + (err as Error).message);
+            toast.error('Erreur: ' + (err as Error).message);
         }
     }
+
+    // 🚀 Branche le temps réel
+    useRealtime(userId ?? undefined, {
+        onInvitation: (data) => {
+            toast(`📩 Nouvelle invitation de ${data.from}`);
+            fetchData();
+        },
+        onResponse: (data) => {
+            if (data.status === 'accepted') {
+                toast.success(`${data.by} a accepté votre invitation 🎉`);
+            } else {
+                toast.error(`${data.by} a refusé votre invitation ❌`);
+            }
+            fetchData();
+        },
+    });
 
     return (
         <div className="max-w-3xl mx-auto p-6">

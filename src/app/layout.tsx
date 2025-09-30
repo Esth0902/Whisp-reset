@@ -4,7 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from '@clerk/nextjs';
 import Header from "@/component/header";
 import Footer from "@/component/footer";
-
+import { Toaster } from 'react-hot-toast';
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -37,8 +37,11 @@ export default function RootLayout({
                 {children}
             </main>
             <Footer />
+            {/* 🔔 Notifications globales */}
+            <Toaster position="top-right" />
         </ClerkProvider>
         </body>
         </html>
     );
 }
+
