@@ -1,77 +1,130 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Trash, Edit2, Check } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
+
+type Message = {
+    id: string;
+    content: string;
+    author: { name: string };
+};
 
 type Conversation = {
     id: string;
+    title?: string;
+    messages: Message[];
+};
+
+type Friend = {
+    id: string;
     name: string;
-    messages: { id: string; text: string; sender: string }[];
 };
 
 export default function MessengerPage() {
-    const [conversations, setConversations] = useState<Conversation[]>([
-        {
-            id: "1",
-            name: "Discussion 1",
-            messages: [
-                { id: "m1", text: "Salut 👋", sender: "Alice" },
-                { id: "m2", text: "Coucou 😄", sender: "Moi" },
-            ],
-        },
-    ]);
-
-    const [activeId, setActiveId] = useState("1");
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [activeId, setActiveId] = useState<string | null>(null);
     const [newMessage, setNewMessage] = useState("");
+    const [friends, setFriends] = useState<Friend[]>([]);
+    const [selectedFriend, setSelectedFriend] = useState<string>("");
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editValue, setEditValue] = useState("");
 
+    const { getToken } = useAuth();
+
+    // 🔄 Charger les conversations
+    useEffect(() => {
+        const fetchConversations = async () => {
+            const token = await getToken();
+            const res = await fetch("http://localhost:4000/conversations/me", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+            setConversations(data);
+            if (data.length > 0) setActiveId(data[0].id);
+        };
+
+        fetchConversations();
+    }, []);
+
+    // 🔄 Charger les amis
+    useEffect(() => {
+        const fetchFriends = async () => {
+            const token = await getToken();
+            const res = await fetch("http://localhost:4000/friends", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+            setFriends(data);
+        };
+
+        fetchFriends();
+    }, []);
+
     const activeConv = conversations.find((c) => c.id === activeId);
 
-    // ➕ Créer une nouvelle conversation
-    const createConversation = () => {
-        const id = Date.now().toString();
-        setConversations((prev) => [
-            ...prev,
-            { id, name: `Nouvelle conv ${prev.length + 1}`, messages: [] },
-        ]);
-        setActiveId(id);
-    };
-
-    // 🗑️ Supprimer une conversation
-    const deleteConversation = (id: string) => {
-        setConversations((prev) => prev.filter((c) => c.id !== id));
-        if (activeId === id && conversations.length > 1) {
-            setActiveId(conversations[0].id);
-        }
-    };
-
-    // ✏️ Renommer une conversation
-    const renameConversation = (id: string) => {
-        setConversations((prev) =>
-            prev.map((c) => (c.id === id ? { ...c, name: editValue } : c))
-        );
-        setEditingId(null);
-        setEditValue("");
-    };
-
     // 📩 Envoyer un message
-    const sendMessage = () => {
-        if (!newMessage.trim() || !activeConv) return;
-        setConversations((prev) =>
-            prev.map((c) =>
-                c.id === activeId
-                    ? {
-                        ...c,
-                        messages: [
-                            ...c.messages,
-                            { id: Date.now().toString(), text: newMessage, sender: "Moi" },
-                        ],
-                    }
-                    : c
-            )
-        );
+    const sendMessage = async () => {
+        if (!newMessage.trim() || !activeId) return;
+
+        const token = await getToken();
+
+        await fetch("http://localhost:3001/messages", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                content: newMessage,
+                conversationId: activeId,
+            }),
+        });
+
         setNewMessage("");
+
+        // Recharge les conversations
+        const res = await fetch("http://localhost:4000/conversations/me", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const updated = await res.json();
+        setConversations(updated);
+    };
+
+    // ➕ Créer une conversation avec un ami
+    const createConversationWithFriend = async () => {
+        if (!selectedFriend) return;
+
+        const token = await getToken();
+
+        const res = await fetch("http://localhost:4000/messages", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                content: "Salut 👋",
+                recipientId: selectedFriend,
+            }),
+        });
+
+        const newMessage = await res.json();
+
+        const updatedRes = await fetch("http://localhost:4000/conversations/me", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const updated = await updatedRes.json();
+        setConversations(updated);
+        setActiveId(newMessage.conversationId);
     };
 
     return (
@@ -80,64 +133,39 @@ export default function MessengerPage() {
             <aside className="w-1/4 border-r border-gray-200 flex flex-col bg-white">
                 <div className="p-4 flex justify-between items-center border-b border-gray-200">
                     <h2 className="font-bold">Conversations</h2>
-                    <button onClick={createConversation} className="hover:text-indigo-600">
-                        <Plus className="w-5 h-5" />
+                </div>
+
+                <div className="p-4 border-t border-gray-200">
+                    <select
+                        value={selectedFriend}
+                        onChange={(e) => setSelectedFriend(e.target.value)}
+                        className="w-full border rounded p-2"
+                    >
+                        <option value="">Choisir un ami</option>
+                        {friends.map((friend) => (
+                            <option key={friend.id} value={friend.id}>
+                                {friend.name}
+                            </option>
+                        ))}
+                    </select>
+                    <button
+                        onClick={createConversationWithFriend}
+                        className="mt-2 w-full bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded"
+                    >
+                        ➕ Nouvelle conversation
                     </button>
                 </div>
+
                 <div className="flex-1 overflow-y-auto">
                     {conversations.map((conv) => (
                         <div
                             key={conv.id}
-                            className={`p-3 flex justify-between items-center cursor-pointer ${
+                            className={`p-3 cursor-pointer ${
                                 conv.id === activeId ? "bg-indigo-50" : "hover:bg-gray-100"
                             }`}
                             onClick={() => setActiveId(conv.id)}
                         >
-                            {editingId === conv.id ? (
-                                <div className="flex-1 flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={editValue}
-                                        onChange={(e) => setEditValue(e.target.value)}
-                                        className="flex-1 rounded border border-gray-300 p-1 text-sm"
-                                        autoFocus
-                                    />
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            renameConversation(conv.id);
-                                        }}
-                                        className="text-green-600 hover:text-green-700"
-                                    >
-                                        <Check className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <>
-                                    <span>{conv.name}</span>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setEditingId(conv.id);
-                                                setEditValue(conv.name);
-                                            }}
-                                            className="hover:text-indigo-600"
-                                        >
-                                            <Edit2 className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                deleteConversation(conv.id);
-                                            }}
-                                            className="hover:text-red-500"
-                                        >
-                                            <Trash className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </>
-                            )}
+                            {conv.title || "Sans titre"}
                         </div>
                     ))}
                 </div>
@@ -152,12 +180,12 @@ export default function MessengerPage() {
                                 <div
                                     key={msg.id}
                                     className={`p-2 rounded-lg max-w-xs shadow ${
-                                        msg.sender === "Moi"
+                                        msg.author.name === "Moi"
                                             ? "ml-auto bg-green-500 text-white"
                                             : "bg-white border border-gray-200 text-gray-900"
                                     }`}
                                 >
-                                    {msg.text}
+                                    {msg.content}
                                 </div>
                             ))}
                         </div>
