@@ -7,9 +7,10 @@ import { ClerkModule } from './clerk/clerk.module';
 import { ProfileModule } from './profile/profile.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { NotificationModule} from "./notification/notification.module";
 
 @Module({
-  imports: [PrismaModule, UserModule, ClerkModule, ProfileModule, FriendshipModule, RealtimeModule],
+  imports: [PrismaModule, UserModule, ClerkModule, ProfileModule, FriendshipModule, RealtimeModule, NotificationModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -6,42 +6,76 @@ import { useNotificationStore } from '@/store/notification-store';
 
 let socket: Socket | null = null;
 
+const SOCKET_URL =
+    process.env.NEXT_PUBLIC_SOCKET_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    'http://localhost:4000';
+
 export function useRealtime(clerkId?: string) {
-    const addNotification = useNotificationStore((state) => state.addNotification);
+    const addNotification = useNotificationStore((s) => s.addNotification);
 
     useEffect(() => {
         if (!clerkId) return;
 
         if (!socket) {
-            socket = io(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000', {
-                auth: { clerkId },
+            socket = io(SOCKET_URL, { auth: { clerkId } });
+
+            socket.on('connect', () => {
+                console.log('🔌 Socket connecté:', socket?.id);
+            });
+            socket.on('disconnect', () => {
+                console.log('❌ Socket déconnecté');
             });
 
-            socket.on('connect', () => console.log('✅ Connecté au serveur temps réel'));
-            socket.on('disconnect', () => console.log('❌ Déconnecté du serveur temps réel'));
-
-            // Invitation reçue
-            socket.on('friendship.requested', (data) => {
-                console.log('📩 Invitation reçue', data);
+            // 📩 Invitation reçue
+            socket.on('friendship.requested', (data: { id: string; from: string }) => {
+                console.log('📩 friendship.requested', data);
                 addNotification({
-                    id: data.id,
+                    id: `req-${data.id}`,
+                    type: 'friendship.requested',
                     message: `📩 Nouvelle invitation de ${data.from}`,
-                    type: 'invitation',
+                    createdAt: new Date(),
                 });
             });
 
-            // Réponse à une invitation
-            socket.on('friendship.responded', (data) => {
-                console.log('🎉 Réponse reçue', data);
+            // ✅ Acceptée (nouvel event côté back)
+            socket.on('friendship.accepted', (data: { by: string; status: 'accepted' }) => {
+                console.log('🎉 friendship.accepted', data);
                 addNotification({
-                    id: data.id,
-                    message:
-                        data.status === 'accepted'
-                            ? `🎉 ${data.by} a accepté ton invitation`
-                            : `❌ ${data.by} a refusé ton invitation`,
-                    type: 'response',
+                    id: `acc-${Date.now()}`,
+                    type: 'friendship.accepted',
+                    message: `🎉 ${data.by} a accepté ton invitation`,
+                    createdAt: new Date(),
                 });
             });
+
+            // ❌ Refusée (nouvel event côté back)
+            socket.on('friendship.declined', (data: { by: string; status: 'declined' }) => {
+                console.log('❌ friendship.declined', data);
+                addNotification({
+                    id: `dec-${Date.now()}`,
+                    type: 'friendship.declined',
+                    message: `❌ ${data.by} a refusé ton invitation`,
+                    createdAt: new Date(),
+                });
+            });
+
+            // 🔁 Compatibilité avec l'ancien event unique
+            socket.on(
+                'friendship.responded',
+                (data: { by: string; status: 'accepted' | 'declined' }) => {
+                    console.log('↔️ friendship.responded', data);
+                    addNotification({
+                        id: `resp-${Date.now()}`,
+                        type: 'friendship.' + data.status,
+                        message:
+                            data.status === 'accepted'
+                                ? `🎉 ${data.by} a accepté ton invitation`
+                                : `❌ ${data.by} a refusé ton invitation`,
+                        createdAt: new Date(),
+                    });
+                },
+            );
         }
 
         return () => {

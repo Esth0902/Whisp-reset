@@ -1,27 +1,43 @@
-// src/store/notification-store.ts
 import { create } from 'zustand';
 
 export type NotificationItem = {
     id: string;
+    type: string;
     message: string;
-    type: 'invitation' | 'response' | 'message'; // message sera utile pour la suite (chat)
-    createdAt: Date;
+    createdAt: Date;   // ⚡ toujours une Date côté frontend
+    read?: boolean;
 };
 
-type NotificationState = {
+type State = {
     notifications: NotificationItem[];
-    addNotification: (notif: Omit<NotificationItem, 'createdAt'>) => void;
+    setNotifications: (items: any[]) => void;
+    addNotification: (item: any) => void;
     clearNotifications: () => void;
 };
 
-export const useNotificationStore = create<NotificationState>((set) => ({
+export const useNotificationStore = create<State>((set) => ({
     notifications: [],
-    addNotification: (notif) =>
+
+    setNotifications: (items) =>
+        set({
+            notifications: items.map((n) => ({
+                ...n,
+                createdAt: new Date(n.createdAt),
+            })),
+        }),
+
+
+    addNotification: (item) =>
         set((state) => ({
             notifications: [
-                { ...notif, createdAt: new Date() },
+                {
+                    ...item,
+                    createdAt: new Date(item.createdAt ?? Date.now()),
+                },
                 ...state.notifications,
             ],
         })),
+
     clearNotifications: () => set({ notifications: [] }),
 }));
+

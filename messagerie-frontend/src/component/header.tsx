@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { UserButton, useUser, useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -12,16 +12,35 @@ import { useRealtime } from '@/hooks/useRealtime';
 
 export default function Header() {
     const { isSignedIn } = useUser();
-    const { userId } = useAuth();
+    const { userId, getToken } = useAuth();
     const [menuOpen, setMenuOpen] = useState(false);
     const pathname = usePathname();
 
     // 🔔 State global (Zustand)
     const notifications = useNotificationStore((s) => s.notifications);
+    const setNotifications = useNotificationStore((s) => s.setNotifications);
     const clearNotifications = useNotificationStore((s) => s.clearNotifications);
 
-    // 🔌 connexion temps réel (une fois au niveau du header pour toute l'app)
+    // 🔌 Connexion temps réel (listener)
     useRealtime(userId ?? undefined);
+
+    // 🔄 Charger les notifs persistées en DB quand userId change
+    useEffect(() => {
+        if (!userId) return;
+        (async () => {
+            try {
+                const token = await getToken();
+                const res = await fetch('http://localhost:4000/notifications', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) throw new Error('Impossible de charger les notifications');
+                const data = await res.json();
+                setNotifications(data); // hydrate le store avec ce qui vient de la DB
+            } catch (err) {
+                console.error('Erreur chargement notifications:', err);
+            }
+        })();
+    }, [userId, getToken, setNotifications]);
 
     // lien actif
     const linkClass = (path: string) =>
@@ -134,3 +153,4 @@ export default function Header() {
         </header>
     );
 }
+

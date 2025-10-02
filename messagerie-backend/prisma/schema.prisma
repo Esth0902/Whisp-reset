@@ -25,6 +25,7 @@ model User {
   messages      Message[]
   friendships   Friendship[]   @relation("userFriends")
   friendOf      Friendship[]   @relation("friendOfUser")
+  notifications Notification[]
 
   createdAt     DateTime       @default(now())
 }
@@ -73,3 +74,15 @@ model Message {
   conversationId String
   createdAt      DateTime    @default(now())
 }
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
+}
+
+

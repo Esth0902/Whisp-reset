@@ -37,11 +37,14 @@ export default function NotificationBell({ count, notifications, onClear }: Prop
                     ) : (
                         <ul className="space-y-2 max-h-64 overflow-y-auto">
                             {notifications.map((n) => (
-                                <li key={`${n.id}-${n.createdAt.getTime()}`} className="text-sm border-b pb-1">
+                                <li key={n.id} className="text-sm border-b pb-1">
                                     <div className="flex items-center justify-between">
                                         <span>{n.message}</span>
                                         <span className="ml-2 text-[10px] text-gray-400">
-                      {n.createdAt.toLocaleTimeString()}
+                      {n.createdAt.toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                      })}
                     </span>
                                     </div>
                                 </li>

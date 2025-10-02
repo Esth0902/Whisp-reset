@@ -10,7 +10,7 @@ import { RealtimeGateway } from '../realtime/realtime.gateway';
 export class FriendshipService {
     constructor(
         private prisma: PrismaService,
-        private realtime: RealtimeGateway, // 👈 injection
+        private realtime: RealtimeGateway, // injection
     ) {}
 
     // Résoudre clerkId en User.id
@@ -39,9 +39,7 @@ export class FriendshipService {
         const friendId = await this.resolveUserIdByName(friendName);
 
         if (requesterId === friendId) {
-            throw new BadRequestException(
-                "Vous ne pouvez pas vous inviter vous-même.",
-            );
+            throw new BadRequestException("Vous ne pouvez pas vous inviter vous-même.");
         }
 
         const existing = await this.prisma.friendship.findFirst({
@@ -66,12 +64,20 @@ export class FriendshipService {
                 status: 'pending',
             },
             include: {
-                user: { select: { clerkId: true, name: true } },   // l’émetteur
-                friend: { select: { clerkId: true, name: true } }, // le destinataire
+                user: { select: { id: true, clerkId: true, name: true } },   // émetteur
+                friend: { select: { id: true, clerkId: true, name: true } }, // destinataire
             },
         });
 
-        console.log("➡️ Envoi notif à", invitation.friend.clerkId);
+        console.log('📡 Emit friendship.requested →', invitation.friend.clerkId);
+
+        await this.prisma.notification.create({
+            data: {
+                type: 'friendship.requested',
+                message: `${invitation.user.name ?? invitation.user.clerkId} vous a envoyé une invitation`,
+                userId: invitation.friendId, // destinataire
+            },
+        });
 
         this.realtime.notifyUser(invitation.friend.clerkId, 'friendship.requested', {
             id: invitation.id,
@@ -82,15 +88,12 @@ export class FriendshipService {
     }
 
     // Répondre à une invitation (accepter/refuser)
-    async respondInvitation(
-        friendshipId: string,
-        status: 'accepted' | 'declined',
-    ) {
+    async respondInvitation(friendshipId: string, status: 'accepted' | 'declined') {
         const friendship = await this.prisma.friendship.findUnique({
             where: { id: friendshipId },
             include: {
-                user: { select: { clerkId: true, name: true } },
-                friend: { select: { clerkId: true, name: true } },
+                user: { select: { id: true, clerkId: true, name: true } },   // émetteur
+                friend: { select: { id: true, clerkId: true, name: true } }, // destinataire
             },
         });
 
@@ -101,26 +104,58 @@ export class FriendshipService {
             throw new BadRequestException("L'invitation a déjà été traitée.");
         }
 
-        let result;
         if (status === 'accepted') {
-            result = await this.prisma.friendship.update({
+            const updated = await this.prisma.friendship.update({
                 where: { id: friendshipId },
                 data: { status: 'accepted' },
+                include: {
+                    user: { select: { id: true, clerkId: true, name: true } },
+                    friend: { select: { id: true, clerkId: true, name: true } },
+                },
             });
+
+            await this.prisma.notification.create({
+                data: {
+                    type: 'friendship.accepted',
+                    message: `${updated.friend.name ?? updated.friend.clerkId} a accepté ton invitation 🎉`,
+                    userId: updated.userId,
+                },
+            });
+
+            console.log('📡 Emit friendship.accepted →', updated.user.clerkId);
+
+            this.realtime.notifyUser(updated.user.clerkId, 'friendship.accepted', {
+                by: updated.friend.name ?? updated.friend.clerkId,
+                status: 'accepted',
+            });
+
+            return updated;
         } else {
-            result = await this.prisma.friendship.delete({
+            const deleted = await this.prisma.friendship.delete({
                 where: { id: friendshipId },
+                include: {
+                    user: { select: { id: true, clerkId: true, name: true } },
+                    friend: { select: { id: true, clerkId: true, name: true } },
+                },
             });
+
+            await this.prisma.notification.create({
+                data: {
+                    type: 'friendship.declined',
+                    message: `${deleted.friend.name ?? deleted.friend.clerkId} a refusé ton invitation ❌`,
+                    userId: deleted.userId,
+                },
+            });
+
+            console.log('📡 Emit friendship.declined →', deleted.user.clerkId);
+
+            this.realtime.notifyUser(deleted.user.clerkId, 'friendship.declined', {
+                by: deleted.friend.name ?? deleted.friend.clerkId,
+                status: 'declined',
+            });
+
+            return { success: true };
         }
-
-        // 🔔 Notif au demandeur
-        this.realtime.notifyUser(friendship.user.clerkId, 'friendship.responded', {
-            id: friendship.id,
-            status,
-            by: friendship.friend.name ?? friendship.friend.clerkId,
-        });
-
-        return result;
     }
 
     // Lister amis confirmés
@@ -155,3 +190,4 @@ export class FriendshipService {
         });
     }
 }
+
