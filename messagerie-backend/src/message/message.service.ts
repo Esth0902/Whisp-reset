@@ -32,12 +32,26 @@ export class MessageService {
         }
     }
 
+        const user = await this.prisma.user.findUnique({
+            where: { clerkId: userId },
+        });
+        if (!user) throw new Error("Utilisateur non trouvé");
+
+
         return this.prisma.message.create({
             data: {
                 content,
-                authorId: userId,
+                authorId: user.id,
                 conversationId: convId,
             },
-        });
+            include: {
+                author: {
+                    select: {
+                        name: true,
+                        clerkId: true,
+                    },
+                },
+            },
+                });
     }
 }

@@ -1,4 +1,4 @@
-import {Injectable, UnauthorizedException} from '@nestjs/common';
+import {BadRequestException, Injectable, UnauthorizedException} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -27,6 +27,9 @@ export class ConversationService {
 
     async createConversation(adminClerkId: string, recipientIds: string[]) {
 
+        if (!recipientIds || recipientIds.length === 0) {
+            throw new BadRequestException("Vous devez sélectionner au moins un ami.");
+        }
         const admin = await this.prisma.user.findUnique({
             where : {clerkId: adminClerkId},
         })
@@ -36,6 +39,25 @@ export class ConversationService {
         const recipients = await this.prisma.user.findMany({
             where: { clerkId: { in: recipientIds } },
         });
+
+        const allUserIds = [admin.id, ...recipients.map(r => r.id)].sort();
+
+        // Vérifier si une conversation avec exactement les mêmes participants existe
+        const existingConvs = await this.prisma.conversation.findMany({
+            where: {
+                AND: allUserIds.map(id => ({
+                    users: { some: { userId: id } }
+                }))
+            },
+            include: { users: true }
+        });
+
+        for (const conv of existingConvs) {
+            const convUserIds = conv.users.map(u => u.userId).sort();
+            if (convUserIds.length === allUserIds.length && convUserIds.every((v, i) => v === allUserIds[i])) {
+                throw new BadRequestException("Une conversation avec ces participants existe déjà");
+            }
+        }
 
         const convCount = await this.prisma.conversation.count({
             where: { title: null },

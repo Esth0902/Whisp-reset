@@ -6,7 +6,8 @@ import { useAuth } from "@clerk/nextjs";
 type Message = {
     id: string;
     content: string;
-    author: { name: string };
+    author: { name: string ;
+    clerkId: string;};
 };
 
 type ConversationUser = {
@@ -74,12 +75,13 @@ export default function MessengerPage() {
     );
 
     // Envoyer un message
+
     const sendMessage = async () => {
         if (!newMessage.trim() || !activeId) return;
 
         const token = await getToken();
 
-        await fetch("http://localhost:4000/messages", {
+        const res = await fetch("http://localhost:4000/message", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -91,21 +93,35 @@ export default function MessengerPage() {
             }),
         });
 
+        const newMsg = await res.json(); // ✅ maintenant res est bien défini
+
+        // Met à jour localement la conversation active
+        setConversations((prev) =>
+            prev.map((conv) =>
+                conv.id === activeId
+                    ? {
+                        ...conv,
+                        messages: [...conv.messages, newMsg],
+                    }
+                    : conv
+            )
+        );
+
         setNewMessage("");
 
-        // Recharge les conversations
-        const res = await fetch("http://localhost:4000/conversations/me", {
+    // Recharge les conversations
+        const updateRes = await fetch("http://localhost:4000/conversations/me", {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         });
-        const updated = await res.json();
+        const updated = await updateRes.json();
         setConversations(Array.isArray(updated) ? updated : []);
     };
 
     // Créer une conversation avec un ami
     const createConversationWithFriend = async () => {
-        if (!selectedFriends) return;
+        if (!selectedFriends || selectedFriends.length === 0) return;
 
         const token = await getToken();
 
@@ -116,7 +132,13 @@ export default function MessengerPage() {
                 Authorization: `Bearer ${token}`,
             },
                 body: JSON.stringify({ recipientIds: selectedFriends }),
-            })
+            });
+
+        if (!res.ok) {
+            const error = await res.json();
+            alert(error.message || "Impossible de créer la conversation");
+            return;
+        }
 
         const updatedRes = await fetch("http://localhost:4000/conversations/me", {
             headers: {
@@ -251,15 +273,17 @@ export default function MessengerPage() {
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                            {activeConv.messages.map((msg) => (
+                            {activeConv.messages.map((msg,index) => (
                                 <div
-                                    key={msg.id}
+                                    key={msg.id ?? `msg-${index}`}
                                     className={`p-2 rounded-lg max-w-xs shadow ${
-                                        msg.author.name === "Moi"
+                                        msg.author?.clerkId === currentUserId
                                             ? "ml-auto bg-green-500 text-white"
                                             : "bg-white border border-gray-200 text-gray-900"
                                     }`}
-                                >
+                                ><div className="text-xs font-semibold mb-1">
+                                    {msg.author?.name || "Utilisateur inconnu"}
+                                </div>
                                     {msg.content}
                                 </div>
                             ))}
