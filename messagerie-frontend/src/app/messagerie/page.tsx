@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash, Edit2, Check } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 
 type Message = {
@@ -10,14 +9,21 @@ type Message = {
     author: { name: string };
 };
 
+type ConversationUser = {
+    user: { clerkId: string; name: string };
+    role: "admin" | "member";
+};
+
 type Conversation = {
     id: string;
     title?: string;
     messages: Message[];
+    users: ConversationUser[];
+
 };
 
 type Friend = {
-    id: string;
+    clerkId: string;
     name: string;
 };
 
@@ -26,11 +32,8 @@ export default function MessengerPage() {
     const [activeId, setActiveId] = useState<string | null>(null);
     const [newMessage, setNewMessage] = useState("");
     const [friends, setFriends] = useState<Friend[]>([]);
-    const [selectedFriend, setSelectedFriend] = useState<string>("");
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editValue, setEditValue] = useState("");
-
-    const { getToken } = useAuth();
+    const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
+    const { getToken,userId: currentUserId } = useAuth();
 
     // 🔄 Charger les conversations
     useEffect(() => {
@@ -42,10 +45,9 @@ export default function MessengerPage() {
                 },
             });
             const data = await res.json();
-            setConversations(data);
-            if (data.length > 0) setActiveId(data[0].id);
+            setConversations(Array.isArray(data) ? data : []);
+            if (Array.isArray(data) && data.length > 0) setActiveId(data[0].id);
         };
-
         fetchConversations();
     }, []);
 
@@ -53,27 +55,31 @@ export default function MessengerPage() {
     useEffect(() => {
         const fetchFriends = async () => {
             const token = await getToken();
-            const res = await fetch("http://localhost:4000/friends", {
+            const res = await fetch("/api/friendships/friends", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
             const data = await res.json();
-            setFriends(data);
-        };
 
+            setFriends(Array.isArray(data) ? data : []);
+        };
         fetchFriends();
     }, []);
 
     const activeConv = conversations.find((c) => c.id === activeId);
 
-    // 📩 Envoyer un message
+    const isAdmin = activeConv?.users.some(
+        (cu) => cu.role === "admin" && cu.user.clerkId === currentUserId
+    );
+
+    // Envoyer un message
     const sendMessage = async () => {
         if (!newMessage.trim() || !activeId) return;
 
         const token = await getToken();
 
-        await fetch("http://localhost:3001/messages", {
+        await fetch("http://localhost:4000/messages", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -94,28 +100,23 @@ export default function MessengerPage() {
             },
         });
         const updated = await res.json();
-        setConversations(updated);
+        setConversations(Array.isArray(updated) ? updated : []);
     };
 
-    // ➕ Créer une conversation avec un ami
+    // Créer une conversation avec un ami
     const createConversationWithFriend = async () => {
-        if (!selectedFriend) return;
+        if (!selectedFriends) return;
 
         const token = await getToken();
 
-        const res = await fetch("http://localhost:4000/messages", {
+        const res = await fetch("http://localhost:4000/conversations", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({
-                content: "Salut 👋",
-                recipientId: selectedFriend,
-            }),
-        });
-
-        const newMessage = await res.json();
+                body: JSON.stringify({ recipientIds: selectedFriends }),
+            })
 
         const updatedRes = await fetch("http://localhost:4000/conversations/me", {
             headers: {
@@ -123,8 +124,42 @@ export default function MessengerPage() {
             },
         });
         const updated = await updatedRes.json();
-        setConversations(updated);
-        setActiveId(newMessage.conversationId);
+        setConversations(Array.isArray(updated) ? updated : []);
+        setActiveId(updated[0]?.id ?? null);
+        setSelectedFriends([]);
+    };
+
+    // Supprimer une conversation (admin seulement)
+    const deleteConversation = async (conversationId: string) => {
+        const token = await getToken();
+        await fetch(`http://localhost:4000/conversations/${conversationId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+        if (activeId === conversationId) setActiveId(null);
+    };
+
+    // Renommer une conversation (admin seulement)
+    const renameConversation = async (conversationId: string) => {
+        const newTitle = prompt("Entrez le nouveau nom de la conversation");
+        if (!newTitle) return;
+
+        const token = await getToken();
+        await fetch(`http://localhost:4000/conversations/${conversationId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ title: newTitle }),
+        });
+
+        // Mettre à jour localement
+        setConversations((prev) =>
+            prev.map((c) => (c.id === conversationId ? { ...c, title: newTitle } : c))
+        );
     };
 
     return (
@@ -137,14 +172,16 @@ export default function MessengerPage() {
 
                 <div className="p-4 border-t border-gray-200">
                     <select
-                        value={selectedFriend}
-                        onChange={(e) => setSelectedFriend(e.target.value)}
+                        multiple
+                        value={selectedFriends}
+                        onChange={(e) =>
+                            setSelectedFriends(Array.from(e.target.selectedOptions, (o) => o.value))
+                        }
                         className="w-full border rounded p-2"
                     >
-                        <option value="">Choisir un ami</option>
                         {friends.map((friend) => (
-                            <option key={friend.id} value={friend.id}>
-                                {friend.name}
+                            <option key={friend.clerkId} value={friend.clerkId}>
+                                {friend.name ?? friend.clerkId}
                             </option>
                         ))}
                     </select>
@@ -157,24 +194,62 @@ export default function MessengerPage() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                    {conversations.map((conv) => (
-                        <div
-                            key={conv.id}
-                            className={`p-3 cursor-pointer ${
-                                conv.id === activeId ? "bg-indigo-50" : "hover:bg-gray-100"
-                            }`}
-                            onClick={() => setActiveId(conv.id)}
-                        >
-                            {conv.title || "Sans titre"}
-                        </div>
-                    ))}
+                    {Array.isArray(conversations) &&
+                        conversations.map((conv) => {
+                            const isAdminForConv = conv.users.some(
+                                (cu) => cu.role === "admin" && cu.user.clerkId === currentUserId
+                            );
+
+                            return (
+                                <div
+                                    key={conv.id}
+                                    className={`flex items-center justify-between p-3 cursor-pointer ${
+                                        conv.id === activeId ? "bg-indigo-50" : "hover:bg-gray-100"
+                                    }`}
+                                    onClick={() => setActiveId(conv.id)}
+                                >
+                                    <span className="truncate">{conv.title || "Sans titre"}</span>
+
+                                    {isAdminForConv && (
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    renameConversation(conv.id);
+                                                }}
+                                                className="hover:text-indigo-600"
+                                                title="Renommer"
+                                            >
+                                                ✏️
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    deleteConversation(conv.id);
+                                                }}
+                                                className="hover:text-red-500"
+                                                title="Supprimer"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                 </div>
+
             </aside>
 
             {/* Zone principale */}
             <main className="flex-1 flex flex-col bg-gray-100">
                 {activeConv ? (
                     <>
+                        {/* HEADER de la conversation */}
+                        <div className="flex items-center gap-2 p-2 border-b bg-white">
+                            <h2 className="font-bold flex-1 text-lg truncate">{activeConv.title || "Nouvelle discussion"}</h2>
+                        </div>
+
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
                             {activeConv.messages.map((msg) => (
                                 <div

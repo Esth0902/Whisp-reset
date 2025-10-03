@@ -51,7 +51,7 @@ model Conversation {
 
 model ConversationUser {
   id             String       @id @default(cuid())
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId String
   user           User         @relation(fields: [userId], references: [id])
   userId         String
@@ -68,7 +68,7 @@ model Message {
   content        String
   author         User         @relation(fields: [authorId], references: [id])
   authorId       String
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   conversationId String
   createdAt      DateTime     @default(now())
 }
