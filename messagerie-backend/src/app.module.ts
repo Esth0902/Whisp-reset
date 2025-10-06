@@ -10,11 +10,12 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { MessageModule } from './message/message.module';
 import { ConversationModule } from './conversation/conversation.module';
 import {PrismaService} from "./prisma/prisma.service";
+import {MessageGateway} from "./message/message.gateway";
 
 @Module({
   imports: [PrismaModule, UserModule, ClerkModule, ProfileModule, FriendshipModule, RealtimeModule, MessageModule, ConversationModule],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [AppService, PrismaService, MessageGateway],
     exports: [PrismaService],
 })
 export class AppModule {}

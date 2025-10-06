@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:4000");
 
 type Message = {
     id: string;
@@ -35,6 +38,9 @@ export default function MessengerPage() {
     const [friends, setFriends] = useState<Friend[]>([]);
     const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
     const { getToken,userId: currentUserId } = useAuth();
+    const { user } = useUser();
+    const clerkUserId = user?.id;
+    const userName = user?.firstName || user?.fullName || "Utilisateur inconnu";
 
     // 🔄 Charger les conversations
     useEffect(() => {
@@ -52,7 +58,29 @@ export default function MessengerPage() {
         fetchConversations();
     }, []);
 
-    // 🔄 Charger les amis
+    useEffect(() => {
+        if (!activeId) return;
+
+        // Rejoindre la "room" de la conversation active
+        socket.emit("joinConversation", activeId);
+
+        // Quand un nouveau message arrive
+        socket.on("newMessage", (message) => {
+            setConversations((prev) =>
+                prev.map((c) =>
+                    c.id === message.conversationId
+                        ? { ...c, messages: [...c.messages, message] }
+                        : c
+                )
+            );
+        });
+
+        return () => {
+            socket.off("newMessage");
+        };
+    }, [activeId]);
+
+    // Charger les amis
     useEffect(() => {
         const fetchFriends = async () => {
             const token = await getToken();
@@ -79,45 +107,25 @@ export default function MessengerPage() {
     const sendMessage = async () => {
         if (!newMessage.trim() || !activeId) return;
 
-        const token = await getToken();
+        // On récupère l'ID et le nom de l'utilisateur depuis Clerk
+        const clerkUserId = user?.id;
+        const userName = user?.firstName || user?.fullName || "Utilisateur inconnu";
 
-        const res = await fetch("http://localhost:4000/message", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                content: newMessage,
-                conversationId: activeId,
-            }),
+        if (!clerkUserId) return; // Sécurité
+
+        // On envoie le message via le WebSocket
+        socket.emit("sendMessage", {
+            conversationId: activeId,
+            content: newMessage,
+            clerkUserId: clerkUserId,
+            authorName: userName,
         });
 
-        const newMsg = await res.json(); // ✅ maintenant res est bien défini
-
-        // Met à jour localement la conversation active
-        setConversations((prev) =>
-            prev.map((conv) =>
-                conv.id === activeId
-                    ? {
-                        ...conv,
-                        messages: [...conv.messages, newMsg],
-                    }
-                    : conv
-            )
-        );
-
+        // Efface le champ de saisie
         setNewMessage("");
-
-    // Recharge les conversations
-        const updateRes = await fetch("http://localhost:4000/conversations/me", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        const updated = await updateRes.json();
-        setConversations(Array.isArray(updated) ? updated : []);
     };
+
+
 
     // Créer une conversation avec un ami
     const createConversationWithFriend = async () => {
