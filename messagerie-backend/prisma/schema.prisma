@@ -15,17 +15,16 @@ datasource db {
 }
 
 model User {
-  id      String  @id @default(cuid())
-  clerkId String  @unique // Identifiant Clerk unique pour liaison
-  email   String  @unique
-  name    String? @unique
-
+  id            String             @id @default(cuid())
+  clerkId       String             @unique // Identifiant Clerk unique pour liaison
+  email         String             @unique
+  name          String?            @unique
   conversations ConversationUser[]
   messages      Message[]
   friendships   Friendship[]       @relation("userFriends")
   friendOf      Friendship[]       @relation("friendOfUser")
-
-  createdAt DateTime @default(now())
+  notifications Notification[]
+  createdAt     DateTime           @default(now())
 }
 
 model Friendship {
@@ -82,5 +81,3 @@ model Notification {
   createdAt DateTime @default(now())
   read      Boolean  @default(false)
 }
-
-
