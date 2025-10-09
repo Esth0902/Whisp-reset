@@ -62,7 +62,7 @@ export class ConversationService {
         const convCount = await this.prisma.conversation.count({
             where: { title: null },
         });
-        const convTitle = `Nouvelle discussion ${convCount + 1}`;
+        const convTitle = `Discussion ${convCount + 1}`;
 
         return this.prisma.conversation.create(
             {

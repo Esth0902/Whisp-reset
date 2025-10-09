@@ -57,8 +57,14 @@ export default function FriendsPage() {
 
             setPendingInvitations(pendData);
             setFriends(friendsData);
-        } catch (err: any) {
-            setError(err.message);
+
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError(String(err));
+            }
+
         } finally {
             setLoading(false);
         }

@@ -25,9 +25,15 @@ export default function ProfilePage() {
                 if (!res.ok) throw new Error('Erreur lors de la récupération du profil');
                 const data: UserProfile = await res.json();
                 setUser(data);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                if (err instanceof Error) {
+                    setError(err.message);
+                } else {
+                    setError(String(err));
+                }
             }
+
+
         }
         fetchProfile();
     }, [getToken]);
