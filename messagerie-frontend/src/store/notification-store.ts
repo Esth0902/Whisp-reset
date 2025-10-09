@@ -10,8 +10,8 @@ export type NotificationItem = {
 
 type State = {
     notifications: NotificationItem[];
-    setNotifications: (items: any[]) => void;
-    addNotification: (item: any) => void;
+    setNotifications: (items: NotificationItem[]) => void;
+    addNotification: (item: NotificationItem) => void;
     clearNotifications: () => void;
 };
 
