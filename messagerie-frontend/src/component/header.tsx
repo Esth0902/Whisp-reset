@@ -63,8 +63,8 @@ export default function Header() {
                     <Link href="/friend" className={linkClass('/friend')}>
                         Amis
                     </Link>
-                    <Link href="/profile" className={linkClass('/profile')}>
-                        Profil
+                    <Link href="/messagerie" className={linkClass('/profile')}>
+                        Messagerie
                     </Link>
 
                     {/* 🔔 Cloche persistante */}

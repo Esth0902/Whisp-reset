@@ -8,11 +8,16 @@ import { ProfileModule } from './profile/profile.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { NotificationModule} from "./notification/notification.module";
+import { MessageModule } from './message/message.module';
+import { ConversationModule } from './conversation/conversation.module';
+import {PrismaService} from "./prisma/prisma.service";
+import {MessageGateway} from "./message/message.gateway";
 
 @Module({
-  imports: [PrismaModule, UserModule, ClerkModule, ProfileModule, FriendshipModule, RealtimeModule, NotificationModule],
+  imports: [PrismaModule, UserModule, ClerkModule, ProfileModule, FriendshipModule, RealtimeModule, MessageModule, ConversationModule, NotificationModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, PrismaService, MessageGateway],
+    exports: [PrismaService],
 })
 export class AppModule {}
 
