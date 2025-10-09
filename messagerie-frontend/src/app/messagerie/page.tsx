@@ -46,7 +46,7 @@ export default function MessengerPage() {
     useEffect(() => {
         const fetchConversations = async () => {
             const token = await getToken();
-            const res = await fetch("http://localhost:4000/conversations/me", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations/me`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -133,7 +133,7 @@ export default function MessengerPage() {
 
         const token = await getToken();
 
-        const res = await fetch("http://localhost:4000/conversations", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -148,7 +148,7 @@ export default function MessengerPage() {
             return;
         }
 
-        const updatedRes = await fetch("http://localhost:4000/conversations/me", {
+        const updatedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations/me`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
