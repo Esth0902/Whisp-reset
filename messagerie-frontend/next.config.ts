@@ -4,7 +4,10 @@ const nextConfig = {
         return [
             {
                 source: '/api/:path*',
-                destination: 'http://localhost:4000/:path*', // Proxy vers backend NestJS
+                destination:
+                    process.env.NODE_ENV === 'development'
+                        ? 'http://localhost:4000/:path*' // ✅ backend local
+                        : 'https://whisp-reset-back.onrender.com/:path*', // ✅ backend Render
             },
         ];
     },
