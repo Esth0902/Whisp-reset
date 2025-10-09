@@ -12,7 +12,6 @@ type UserSuggestion = {
     name: string | null;
 };
 
-const baseUrl = 'http://localhost:4000';
 
 export default function FriendInvitationForm({ onSent }: Props) {
     const { getToken } = useAuth();
@@ -34,7 +33,7 @@ export default function FriendInvitationForm({ onSent }: Props) {
             try {
                 const token = await getToken();
                 const res = await fetch(
-                    `${baseUrl}/users/search?query=${encodeURIComponent(friendName)}`,
+                    `${process.env.NEXT_PUBLIC_API_URL}/users/search?query=${encodeURIComponent(friendName)}`,
                     {
                         headers: { Authorization: `Bearer ${token}` },
                     }
@@ -60,7 +59,7 @@ export default function FriendInvitationForm({ onSent }: Props) {
         try {
             const token = await getToken();
 
-            const res = await fetch(`${baseUrl}/friendships`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/friendships`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

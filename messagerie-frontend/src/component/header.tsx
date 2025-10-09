@@ -30,7 +30,7 @@ export default function Header() {
         (async () => {
             try {
                 const token = await getToken();
-                const res = await fetch('http://localhost:4000/notifications', {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (!res.ok) throw new Error('Impossible de charger les notifications');

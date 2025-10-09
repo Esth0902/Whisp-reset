@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:4000");
+const socket = io(`${process.env.NEXT_PUBLIC_API_URL}`);
 
 type Message = {
     id: string;
@@ -162,7 +162,7 @@ export default function MessengerPage() {
     // Supprimer une conversation (admin seulement)
     const deleteConversation = async (conversationId: string) => {
         const token = await getToken();
-        await fetch(`http://localhost:4000/conversations/${conversationId}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations/${conversationId}`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -177,7 +177,7 @@ export default function MessengerPage() {
         if (!newTitle) return;
 
         const token = await getToken();
-        await fetch(`http://localhost:4000/conversations/${conversationId}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations/${conversationId}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
