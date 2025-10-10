@@ -9,7 +9,8 @@ const socket = io('http://localhost:4000');
 type Message = {
     id: string;
     content: string;
-    author: { name: string; clerkId: string };
+    createdAt: string;
+    author: { name: string; clerkId: string; avatarUrl?: string };
 };
 
 type ConversationUser = {
@@ -35,12 +36,13 @@ export default function MessengerPage() {
     const [newMessage, setNewMessage] = useState('');
     const [friends, setFriends] = useState<Friend[]>([]);
     const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
+    const [searchConv, setSearchConv] = useState('');
+    const [showModal, setShowModal] = useState(false);
+
     const { getToken, userId: currentUserId } = useAuth();
     const { user } = useUser();
     const clerkUserId = user?.id;
     const userName = user?.firstName || user?.fullName || 'Utilisateur inconnu';
-    const [searchConv, setSearchConv] = useState('');
-    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -119,7 +121,7 @@ export default function MessengerPage() {
         const updated = await updatedRes.json();
         setConversations(Array.isArray(updated) ? updated : []);
         setActiveId(updated[0]?.id ?? null);
-        setSelectedFriends([]); // ✅ décocher automatiquement
+        setSelectedFriends([]);
     };
 
     const deleteConversation = async (conversationId: string) => {
@@ -149,7 +151,13 @@ export default function MessengerPage() {
         );
     };
 
-    const filterConversations = conversations.filter((conv) =>
+    const sortedConversations = [...conversations].sort((a, b) => {
+        const lastA = a.messages[a.messages.length - 1]?.createdAt ?? '';
+        const lastB = b.messages[b.messages.length - 1]?.createdAt ?? '';
+        return new Date(lastB).getTime() - new Date(lastA).getTime();
+    });
+
+    const filteredConversations = sortedConversations.filter((conv) =>
         (conv.title || '').toLowerCase().includes(searchConv.toLowerCase()) ||
         conv.users.some((u) =>
             u.user.name.toLowerCase().includes(searchConv.toLowerCase())
@@ -159,9 +167,7 @@ export default function MessengerPage() {
     return (
         <div className="h-[calc(100vh-64px)] flex bg-gray-50 text-gray-900">
             {/* Sidebar */}
-
             <aside className="w-1/4 border-r border-gray-200 flex flex-col bg-white">
-
                 <div className="p-4 border-b border-gray-200">
                     <h2 className="text-lg font-semibold text-gray-800">Mes conversations</h2>
                 </div>
@@ -176,18 +182,18 @@ export default function MessengerPage() {
 
                 <div className="p-4 border-t border-gray-200">
                     <button
-                        onClick={()=> setShowModal(true)}
-                        className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition"
+                        onClick={() => setShowModal(true)}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition"
                     >
                         ✨ Nouvelle conversation
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                    {filterConversations.length === 0 && (
+                    {filteredConversations.length === 0 && (
                         <p className="text-sm text-gray-500 px-4">Aucune conversation trouvée.</p>
                     )}
-                    {filterConversations.map((conv) => {
+                    {filteredConversations.map((conv) => {
                         const isAdminForConv = conv.users.some(
                             (cu) => cu.role === 'admin' && cu.user.clerkId === currentUserId
                         );
@@ -240,16 +246,22 @@ export default function MessengerPage() {
                             {activeConv.messages.map((msg, index) => (
                                 <div
                                     key={msg.id ?? `msg-${index}`}
-                                    className={`max-w-[70%] p-3 rounded-xl shadow-sm text-sm ${
-                                        msg.author?.clerkId === currentUserId
-                                            ? 'ml-auto bg-indigo-600 text-white'
-                                            : 'bg-gray-100 text-gray-900'
-                                    }`}
+                                    className={`flex items-start gap-2 ${msg.author?.clerkId === currentUserId ? 'justify-end' : ''}`}
                                 >
+
+                                    <div
+                                        className={`max-w-[70%] p-3 rounded-xl shadow-sm text-sm ${
+                                            msg.author?.clerkId === currentUserId
+                                                ? 'bg-indigo-600 text-white'
+                                                : 'bg-gray-100 text-gray-900'
+                                        }`}
+                                    >
+
                                     <div className="text-xs font-semibold mb-1 opacity-80">
-                                        {msg.author?.name || 'Utilisateur inconnu'}
+                                            {msg.author?.name || 'Utilisateur inconnu'}
+                                        </div>
+                                        <div>{msg.content}</div>
                                     </div>
-                                    <div>{msg.content}</div>
                                 </div>
                             ))}
                         </div>
@@ -277,6 +289,7 @@ export default function MessengerPage() {
                 )}
             </main>
 
+            {/* Popup de création */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -323,5 +336,5 @@ export default function MessengerPage() {
                 </div>
             )}
         </div>
-    );}
-
+    );
+}
