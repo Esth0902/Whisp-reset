@@ -40,6 +40,7 @@ export default function MessengerPage() {
     const clerkUserId = user?.id;
     const userName = user?.firstName || user?.fullName || 'Utilisateur inconnu';
     const [searchConv, setSearchConv] = useState('');
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -174,41 +175,18 @@ export default function MessengerPage() {
                 />
 
                 <div className="p-4 border-t border-gray-200">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Créer une conversation</h3>
-                    <div className="space-y-2 max-h-48 overflow-y-auto rounded-md border border-gray-200 p-2 bg-white">
-                        {friends.map((friend) => (
-                            <label
-                                key={friend.clerkId}
-                                className="flex items-center gap-2 p-2 rounded hover:bg-indigo-50 transition cursor-pointer"
-                            >
-                                <input
-                                    type="checkbox"
-                                    value={friend.clerkId}
-                                    checked={selectedFriends.includes(friend.clerkId)}
-                                    onChange={(e) => {
-                                        const checked = e.target.checked;
-                                        setSelectedFriends((prev) =>
-                                            checked
-                                                ? [...prev, friend.clerkId]
-                                                : prev.filter((id) => id !== friend.clerkId)
-                                        );
-                                    }}
-                                    className="accent-indigo-600 w-4 h-4"
-                                />
-                                <span className="text-sm text-gray-800">{friend.name ?? friend.clerkId}</span>
-                            </label>
-                        ))}
-                    </div>
-
                     <button
-                        onClick={createConversationWithFriend}
+                        onClick={()=> setShowModal(true)}
                         className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition"
                     >
-                        ✨ Créer une conversation
+                        ✨ Nouvelle conversation
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
+                    {filterConversations.length === 0 && (
+                        <p className="text-sm text-gray-500 px-4">Aucune conversation trouvée.</p>
+                    )}
                     {filterConversations.map((conv) => {
                         const isAdminForConv = conv.users.some(
                             (cu) => cu.role === 'admin' && cu.user.clerkId === currentUserId
@@ -298,6 +276,52 @@ export default function MessengerPage() {
                     </div>
                 )}
             </main>
+
+            {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                        <h3 className="text-lg font-semibold mb-4">Sélectionnez des amis</h3>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {friends.map((friend) => (
+                                <label key={friend.clerkId} className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        value={friend.clerkId}
+                                        checked={selectedFriends.includes(friend.clerkId)}
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setSelectedFriends((prev) =>
+                                                checked
+                                                    ? [...prev, friend.clerkId]
+                                                    : prev.filter((id) => id !== friend.clerkId)
+                                            );
+                                        }}
+                                        className="accent-indigo-600"
+                                    />
+                                    <span>{friend.name}</span>
+                                </label>
+                            ))}
+                        </div>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={() => {
+                                    void createConversationWithFriend();
+                                    setShowModal(false);
+                                }}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                            >
+                                Créer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-    );
-}
+    );}
+
