@@ -39,6 +39,7 @@ export default function MessengerPage() {
     const { user } = useUser();
     const clerkUserId = user?.id;
     const userName = user?.firstName || user?.fullName || 'Utilisateur inconnu';
+    const [searchConv, setSearchConv] = useState('');
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -147,13 +148,30 @@ export default function MessengerPage() {
         );
     };
 
+    const filterConversations = conversations.filter((conv) =>
+        (conv.title || '').toLowerCase().includes(searchConv.toLowerCase()) ||
+        conv.users.some((u) =>
+            u.user.name.toLowerCase().includes(searchConv.toLowerCase())
+        )
+    );
+
     return (
         <div className="h-[calc(100vh-64px)] flex bg-gray-50 text-gray-900">
             {/* Sidebar */}
+
             <aside className="w-1/4 border-r border-gray-200 flex flex-col bg-white">
+
                 <div className="p-4 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-800">Conversations</h2>
+                    <h2 className="text-lg font-semibold text-gray-800">Mes conversations</h2>
                 </div>
+
+                <input
+                    type="text"
+                    placeholder="Rechercher une conversation..."
+                    value={searchConv}
+                    onChange={(e) => setSearchConv(e.target.value)}
+                    className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-indigo-300"
+                />
 
                 <div className="p-4 border-t border-gray-200">
                     <h3 className="text-sm font-semibold text-gray-700 mb-2">Créer une conversation</h3>
@@ -191,7 +209,7 @@ export default function MessengerPage() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                    {conversations.map((conv) => {
+                    {filterConversations.map((conv) => {
                         const isAdminForConv = conv.users.some(
                             (cu) => cu.role === 'admin' && cu.user.clerkId === currentUserId
                         );
