@@ -92,17 +92,18 @@ export default function FriendInvitationForm({ onSent }: Props) {
     return (
         <form
             onSubmit={handleSubmit}
-            className="mb-6 max-w-sm mx-auto p-4 border rounded shadow bg-white relative"
+            className="flex flex-col gap-4 max-w-md"
         >
-            <label htmlFor="friendName" className="block mb-2 font-semibold">
+
+        <label htmlFor="friendName" className="block mb-2 font-semibold">
                 Nom de l’ami :
             </label>
             <input
                 id="friendName"
                 value={friendName}
                 onChange={(e) => setFriendName(e.target.value)}
-                className="w-full px-3 py-2 border rounded mb-2"
-                placeholder="Exemple : esther09"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-indigo-300"
+                placeholder="Nom ou pseudo de l’ami"
                 required
                 disabled={loading}
             />
@@ -128,12 +129,13 @@ export default function FriendInvitationForm({ onSent }: Props) {
             <button
                 type="submit"
                 disabled={loading}
-                className="mt-4 w-full py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition"
             >
-                {loading ? 'Envoi en cours...' : 'Envoyer une invitation'}
+                {loading ? 'Envoi en cours...' : '➕ Envoyer l’invitation'}
             </button>
 
-            {status && <p className="mt-3 text-green-600">{status}</p>}
+
+    {status && <p className="mt-3 text-green-600">{status}</p>}
             {error && <p className="mt-3 text-red-600">{error}</p>}
         </form>
     );

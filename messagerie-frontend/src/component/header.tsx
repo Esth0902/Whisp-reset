@@ -119,6 +119,14 @@ export default function Header() {
                                     Profil
                                 </Link>
 
+                                <Link
+                                    href="/offre"
+                                    className={linkClass('/offre')}
+                                    onClick={() => setMenuOpen(false)}
+                                >
+                                    Nos offres
+                                </Link>
+
                                 {/* 🔔 Cloche aussi en mobile */}
                                 <NotificationBell
                                     count={notifications.length}
