@@ -50,7 +50,7 @@ export default function MessengerPage() {
             setConversations(Array.isArray(data) ? data : []);
             if (Array.isArray(data) && data.length > 0) setActiveId(data[0].id);
         };
-        fetchConversations();
+        void fetchConversations();
     }, []);
 
     useEffect(() => {
@@ -79,14 +79,10 @@ export default function MessengerPage() {
             const data = await res.json();
             setFriends(Array.isArray(data) ? data : []);
         };
-        fetchFriends();
+        void fetchFriends();
     }, []);
 
     const activeConv = conversations.find((c) => c.id === activeId);
-
-    const isAdmin = activeConv?.users.some(
-        (cu) => cu.role === 'admin' && cu.user.clerkId === currentUserId
-    );
 
     const sendMessage = async () => {
         if (!newMessage.trim() || !activeId || !clerkUserId) return;
@@ -215,7 +211,7 @@ export default function MessengerPage() {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                renameConversation(conv.id);
+                                                void renameConversation(conv.id);
                                             }}
                                             className="hover:text-indigo-600"
                                             title="Renommer"
@@ -225,7 +221,7 @@ export default function MessengerPage() {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                deleteConversation(conv.id);
+                                                void deleteConversation(conv.id);
                                             }}
                                             className="hover:text-red-500"
                                             title="Supprimer"
