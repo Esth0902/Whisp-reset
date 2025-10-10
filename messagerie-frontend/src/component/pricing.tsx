@@ -1,5 +1,7 @@
 'use client';
 
+import { SignInButton } from '@clerk/nextjs';
+
 export default function PricingSection() {
     return (
         <section className="py-12 px-6 bg-white">
@@ -30,9 +32,13 @@ export default function PricingSection() {
                         <li>🚀 Support prioritaire</li>
                     </ul>
                     <p className="mt-6 text-2xl font-bold text-blue-700">9,99 €/mois</p>
-                    <button className="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition">
-                        Commencez votre essai gratuit
-                    </button>
+
+                    <SignInButton>
+                        <button className="mt-4 bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition">
+                            Commencez votre essai gratuit
+                        </button>
+                    </SignInButton>
+
                 </div>
             </div>
         </section>
