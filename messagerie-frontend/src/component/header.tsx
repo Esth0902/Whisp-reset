@@ -66,6 +66,9 @@ export default function Header() {
                     <Link href="/messagerie" className={linkClass('/profile')}>
                         Messagerie
                     </Link>
+                    <Link href="/offre" className={linkClass('/offre')}>
+                        Nos offres
+                    </Link>
 
                     {/* 🔔 Cloche persistante */}
                     <NotificationBell
