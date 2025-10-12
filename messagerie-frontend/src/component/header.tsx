@@ -66,6 +66,9 @@ export default function Header() {
                     <Link href="/messagerie" className={linkClass('/profile')}>
                         Messagerie
                     </Link>
+                    <Link href="/offre" className={linkClass('/offre')}>
+                        Nos offres
+                    </Link>
 
                     {/* 🔔 Cloche persistante */}
                     <NotificationBell
@@ -117,6 +120,14 @@ export default function Header() {
                                     onClick={() => setMenuOpen(false)}
                                 >
                                     Profil
+                                </Link>
+
+                                <Link
+                                    href="/offre"
+                                    className={linkClass('/offre')}
+                                    onClick={() => setMenuOpen(false)}
+                                >
+                                    Nos offres
                                 </Link>
 
                                 {/* 🔔 Cloche aussi en mobile */}

@@ -8,11 +8,12 @@ import {
     SignInButton,
 } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import Pricing from '@/component/pricing';
 
 export default function HomePage() {
     const { user, isSignedIn } = useUser();
     const { getToken } = useAuth();
-    const [syncing, setSyncing] = useState(false); // ⏳ false par défaut
+    const [syncing, setSyncing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const displayName =
@@ -23,62 +24,64 @@ export default function HomePage() {
 
     useEffect(() => {
         async function syncProfile() {
-            if (!isSignedIn) return; // 🚨 ne rien faire si pas connecté
-
+            if (!isSignedIn) return;
             setSyncing(true);
             try {
                 const token = await getToken();
                 if (!token) return;
-
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-
-                if (!res.ok) {
-                    throw new Error('Impossible de synchroniser le profil utilisateur');
-                }
-
+                if (!res.ok) throw new Error('Impossible de synchroniser le profil utilisateur');
                 setSyncing(false);
             } catch (err: unknown) {
-                if (err instanceof Error) {
-                    setError(err.message);
-                } else {
-                    setError(String(err));
-                }
+                setError(err instanceof Error ? err.message : String(err));
                 setSyncing(false);
             }
-
-
-
         }
-        syncProfile();
+        void syncProfile();
     }, [isSignedIn, getToken]);
 
     if (error) {
         return (
-            <main>
-                <p className="text-red-600">
-                    Erreur lors de la synchro utilisateur : {error}
+            <main className="p-6">
+                <p className="text-red-600 text-center">
+                    Erreur lors de la synchronisation : {error}
                 </p>
             </main>
         );
     }
 
     return (
-        <main>
-            <SignedOut>
-                <p>Vous n’êtes pas connecté.</p>
-                <SignInButton>Se connecter</SignInButton>
-            </SignedOut>
+        <main className="min-h-screen bg-white text-gray-800">
+            {/* Hero Section */}
+            <section className="text-center py-10 px-6 bg-gradient-to-br from-blue-50 to-white">
+                <h1 className="text-5xl font-extrabold mb-4">Votre messagerie moderne et sécurisée</h1>
+                <p className="text-lg text-gray-600 mb-8">
+                    Communiquez facilement avec vos amis, collègues ou clients. Simple, rapide et privé.
+                </p>
 
-            <SignedIn>
-                {syncing ? (
-                    <p className="animate-pulse">Initialisation de votre compte...</p>
-                ) : (
-                    <p>Bienvenue, {displayName} !</p>
-                )}
-            </SignedIn>
+                <SignedOut>
+                    <SignInButton>
+                        <button className="bg-blue-600 text-white px-6 py-3 rounded-full text-lg hover:bg-blue-700 transition">
+                            🚀 Essayez gratuitement dès maintenant
+                        </button>
+                    </SignInButton>
+                </SignedOut>
+
+                <SignedIn>
+                    {syncing ? (
+                        <p className="text-gray-500 animate-pulse">Chargement de votre espace personnel...</p>
+                    ) : (
+                        <p className="text-xl font-medium">Bienvenue, {displayName} 👋</p>
+                    )}
+                </SignedIn>
+            </section>
+
+            {/* Section offres uniquement si non connecté */}
+            <SignedOut>
+                <Pricing />
+            </SignedOut>
         </main>
     );
 }
-

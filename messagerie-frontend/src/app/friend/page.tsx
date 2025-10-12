@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import FriendInvitationForm from '@/component/friendinvitationform';
-import { useAuth } from '@clerk/nextjs';
-import { useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 import { useRealtime } from '@/hooks/useRealtime';
 
 type User = {
@@ -29,7 +28,6 @@ export default function FriendsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // branchement au temps réel
     useRealtime(userId ?? undefined);
 
     async function fetchData() {
@@ -57,14 +55,8 @@ export default function FriendsPage() {
 
             setPendingInvitations(pendData);
             setFriends(friendsData);
-
         } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError(String(err));
-            }
-
+            setError(err instanceof Error ? err.message : String(err));
         } finally {
             setLoading(false);
         }
@@ -77,7 +69,6 @@ export default function FriendsPage() {
     async function respondInvitation(id: string, status: 'accepted' | 'declined') {
         try {
             const token = await getToken();
-
             const res = await fetch(`/api/friendships/${id}/respond`, {
                 method: 'PATCH',
                 headers: {
@@ -87,10 +78,7 @@ export default function FriendsPage() {
                 body: JSON.stringify({ status }),
             });
 
-            if (!res.ok) {
-                throw new Error('Erreur lors de la réponse');
-            }
-
+            if (!res.ok) throw new Error('Erreur lors de la réponse');
             fetchData();
         } catch (err) {
             alert('Erreur: ' + (err as Error).message);
@@ -98,62 +86,72 @@ export default function FriendsPage() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-6">Gestion des amis</h1>
+        <div className="max-w-4xl mx-auto p-6 space-y-10">
+            <h1 className="text-3xl font-bold text-gray-800">👥 Gestion des amis</h1>
 
-            <FriendInvitationForm onSent={fetchData} />
+            <section className="mb-8">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">🔍 Inviter un ami</h2>
+                <FriendInvitationForm onSent={fetchData} />
+            </section>
 
             {loading ? (
-                <p>Chargement des invitations et amis...</p>
+                <p className="text-gray-500">Chargement des invitations et amis...</p>
             ) : error ? (
                 <p className="text-red-600">{error}</p>
             ) : (
                 <>
                     {/* Invitations reçues */}
-                    <section className="mb-10">
-                        <h2 className="text-xl font-semibold mb-4">Invitations reçues</h2>
-                        {pendingInvitations.length === 0 && <p>Aucune invitation en attente.</p>}
-                        <ul>
-                            {pendingInvitations.map((inv) => (
-                                <li
-                                    key={inv.id}
-                                    className="flex justify-between items-center border rounded p-3 mb-2 bg-white"
-                                >
-                                    <span>{inv.user.name ?? inv.user.username ?? inv.user.clerkId}</span>
-                                    <div className="space-x-2">
-                                        <button
-                                            onClick={() => respondInvitation(inv.id, 'accepted')}
-                                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                                        >
-                                            Accepter
-                                        </button>
-                                        <button
-                                            onClick={() => respondInvitation(inv.id, 'declined')}
-                                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
-                                        >
-                                            Refuser
-                                        </button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                    <section>
+                        <h2 className="text-xl font-semibold text-gray-800 mb-4">📩 Invitations reçues</h2>
+                        {pendingInvitations.length === 0 ? (
+                            <p className="text-gray-500">Aucune invitation en attente.</p>
+                        ) : (
+                            <ul className="space-y-3">
+                                {pendingInvitations.map((inv) => (
+                                    <li
+                                        key={inv.id}
+                                        className="flex justify-between items-center bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                                    >
+                    <span className="text-gray-800 font-medium">
+                      {inv.user.name ?? inv.user.username ?? inv.user.clerkId}
+                    </span>
+                                        <div className="space-x-2">
+                                            <button
+                                                onClick={() => respondInvitation(inv.id, 'accepted')}
+                                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                                            >
+                                                Accepter
+                                            </button>
+                                            <button
+                                                onClick={() => respondInvitation(inv.id, 'declined')}
+                                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                                            >
+                                                Refuser
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </section>
 
                     {/* Liste des amis */}
                     <section>
-                        <h2 className="text-xl font-semibold mb-4">Amis</h2>
+                        <h2 className="text-xl font-semibold text-gray-800 mb-4">👫 Vos amis</h2>
                         {friends.length === 0 ? (
-                            <p>Vous n’avez pas encore d’amis.</p>
+                            <p className="text-gray-500">Vous n’avez pas encore d’amis.</p>
                         ) : (
-                            <ul>
+                            <ul className="space-y-3">
                                 {friends.map((friend) => (
                                     <li
                                         key={friend.clerkId}
-                                        className="border rounded p-3 mb-2 bg-white"
+                                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
                                     >
-                                        {friend.name && friend.name.trim() !== ''
-                                            ? friend.name
-                                            : friend.username ?? friend.clerkId}
+                    <span className="text-gray-800 font-medium">
+                      {friend.name?.trim() !== ''
+                          ? friend.name
+                          : friend.username ?? friend.clerkId}
+                    </span>
                                     </li>
                                 ))}
                             </ul>

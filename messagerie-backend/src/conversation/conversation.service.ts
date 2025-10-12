@@ -59,10 +59,8 @@ export class ConversationService {
             }
         }
 
-        const convCount = await this.prisma.conversation.count({
-            where: { title: null },
-        });
-        const convTitle = `Discussion ${convCount + 1}`;
+        const recipientNames = recipients.map(r => r.name).filter(Boolean);
+        const convTitle = `Conversation avec ${recipientNames.join(', ')}`;
 
         return this.prisma.conversation.create(
             {
