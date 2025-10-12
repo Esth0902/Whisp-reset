@@ -23,47 +23,47 @@ export function useRealtime(clerkId?: string) {
             socket.on('connect', () => {
                 console.log('🔌 Socket connecté:', socket?.id);
             });
+
             socket.on('disconnect', () => {
-                console.log('❌ Socket déconnecté');
+                console.log('Socket déconnecté');
             });
 
-            // 📩 Invitation reçue
-            socket.on('friendship.requested', (data: { id: string; from: string }) => {
+            socket.on('friendship.requested', (data: { id: string; from: string; fromClerkId?: string }) => {
                 console.log('📩 friendship.requested', data);
                 addNotification({
                     id: `req-${data.id}`,
                     type: 'friendship.requested',
                     message: `📩 Nouvelle invitation de ${data.from}`,
+                    link: '/friend', // 🔗 lien vers la page Amis
                     createdAt: new Date(),
                 });
             });
 
-            // ✅ Acceptée (nouvel event côté back)
-            socket.on('friendship.accepted', (data: { by: string; status: 'accepted' }) => {
+            socket.on('friendship.accepted', (data: { by: string; status: 'accepted'; fromClerkId?: string }) => {
                 console.log('🎉 friendship.accepted', data);
                 addNotification({
                     id: `acc-${Date.now()}`,
                     type: 'friendship.accepted',
                     message: `🎉 ${data.by} a accepté ton invitation`,
+                    link: '/friend', // 🔗 idem, renvoie vers la gestion des amis
                     createdAt: new Date(),
                 });
             });
 
-            // ❌ Refusée (nouvel event côté back)
-            socket.on('friendship.declined', (data: { by: string; status: 'declined' }) => {
+            socket.on('friendship.declined', (data: { by: string; status: 'declined'; fromClerkId?: string }) => {
                 console.log('❌ friendship.declined', data);
                 addNotification({
                     id: `dec-${Date.now()}`,
                     type: 'friendship.declined',
                     message: `❌ ${data.by} a refusé ton invitation`,
+                    link: '/friend',
                     createdAt: new Date(),
                 });
             });
 
-            // 🔁 Compatibilité avec l'ancien event unique
             socket.on(
                 'friendship.responded',
-                (data: { by: string; status: 'accepted' | 'declined' }) => {
+                (data: { by: string; status: 'accepted' | 'declined'; fromClerkId?: string }) => {
                     console.log('↔️ friendship.responded', data);
                     addNotification({
                         id: `resp-${Date.now()}`,
@@ -72,10 +72,27 @@ export function useRealtime(clerkId?: string) {
                             data.status === 'accepted'
                                 ? `🎉 ${data.by} a accepté ton invitation`
                                 : `❌ ${data.by} a refusé ton invitation`,
+                        link: '/friend',
                         createdAt: new Date(),
                     });
                 },
             );
+
+            socket.on('message.new', (data: {
+                from: string;
+                fromClerkId: string;
+                conversationId: string;
+                content: string;
+            }) => {
+                console.log('💬 message.new', data);
+                addNotification({
+                    id: `msg-${data.conversationId}-${Date.now()}`,
+                    type: 'message.new',
+                    message: `💬 Nouveau message de ${data.from}`,
+                    link: `/messagerie?conversation=${data.conversationId}`,
+                    createdAt: new Date(),
+                });
+            });
         }
 
         return () => {

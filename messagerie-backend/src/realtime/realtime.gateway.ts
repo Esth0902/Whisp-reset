@@ -11,18 +11,16 @@ export class RealtimeGateway implements OnGatewayConnection {
     server: Server;
 
     handleConnection(client: Socket) {
-        console.log('Client connecté :', client.id);
-
-        // Auth simplifiée : on récupère clerkId depuis le handshake
         const { clerkId } = client.handshake.auth;
+        console.log('Client connecté :', client.id, '→ clerkId:', clerkId);
+
         if (clerkId) {
             client.join(`user:${clerkId}`);
-            console.log(`Client ${client.id} rejoint la room user:${clerkId}`);
         }
     }
 
-    // Envoi d'une notification à un utilisateur
     notifyUser(clerkId: string, event: string, payload: any) {
+        console.log(`📤 Envoi ${event} à user:${clerkId}`, payload);
         this.server.to(`user:${clerkId}`).emit(event, payload);
     }
 }

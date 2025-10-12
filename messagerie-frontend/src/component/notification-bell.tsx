@@ -1,17 +1,42 @@
 'use client';
 
 import { Bell } from 'lucide-react';
-import { useState } from 'react';
-import { NotificationItem } from '@/store/notification-store';
+import { useState, useEffect } from 'react';
+import { NotificationItem, useNotificationStore } from '@/store/notification-store';
+import { useAuth } from '@clerk/nextjs';
+import Link from 'next/link';
 
-type Props = {
+export default function NotificationBell({
+                                             count,
+                                             notifications,
+                                             onClear,
+                                         }: {
     count: number;
     notifications: NotificationItem[];
     onClear: () => void;
-};
-
-export default function NotificationBell({ count, notifications, onClear }: Props) {
+}) {
     const [open, setOpen] = useState(false);
+    const { getToken } = useAuth();
+
+    const loadFromServer = useNotificationStore((s) => s.loadFromServer);
+    const markAllAsRead = useNotificationStore((s) => s.markAllAsRead);
+
+    useEffect(() => {
+        (async () => {
+            const token = await getToken();
+            if (token) {
+                await loadFromServer(token);
+            }
+        })();
+    }, [getToken, loadFromServer]);
+
+    async function handleMarkAllRead() {
+        const token = await getToken();
+        if (token) {
+            await markAllAsRead(token);
+        }
+        onClear();
+    }
 
     return (
         <div className="relative">
@@ -32,6 +57,7 @@ export default function NotificationBell({ count, notifications, onClear }: Prop
             {open && (
                 <div className="absolute right-0 mt-2 w-72 bg-white shadow-lg rounded p-3 z-50 text-gray-900">
                     <h3 className="font-bold mb-2">Notifications</h3>
+
                     {notifications.length === 0 ? (
                         <p className="text-gray-500">Aucune notification</p>
                     ) : (
@@ -39,21 +65,39 @@ export default function NotificationBell({ count, notifications, onClear }: Prop
                             {notifications.map((n) => (
                                 <li key={n.id} className="text-sm border-b pb-1">
                                     <div className="flex items-center justify-between">
-                                        <span>{n.message}</span>
+                                        {/* ✅ Si la notif contient un lien, on rend le message cliquable */}
+                                        {n.link ? (
+                                            <Link
+                                                href={n.link}
+                                                className="text-blue-600 hover:underline"
+                                                onClick={() => setOpen(false)} // ferme le menu quand on clique
+                                            >
+                                                {n.message}
+                                            </Link>
+                                        ) : (
+                                            <span>{n.message}</span>
+                                        )}
+
                                         <span className="ml-2 text-[10px] text-gray-400">
-                      {n.createdAt.toLocaleTimeString('fr-FR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                      })}
+                      {n.createdAt instanceof Date
+                          ? n.createdAt.toLocaleTimeString('fr-FR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                          })
+                          : new Date(n.createdAt).toLocaleTimeString('fr-FR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                          })}
                     </span>
                                     </div>
                                 </li>
                             ))}
                         </ul>
                     )}
+
                     {notifications.length > 0 && (
                         <button
-                            onClick={onClear}
+                            onClick={handleMarkAllRead}
                             className="mt-2 text-xs text-blue-600 hover:underline"
                             type="button"
                         >

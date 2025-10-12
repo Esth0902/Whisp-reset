@@ -6,48 +6,41 @@ import {
     ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { PrismaService } from '../prisma/prisma.service';
+import { MessageService } from './message.service';
 
 @WebSocketGateway({
-    cors: {
-        origin: '*',
-    },
+    cors: { origin: '*' },
 })
 export class MessageGateway {
     @WebSocketServer()
     server: Server;
 
-    constructor(private prisma: PrismaService) {}
+    constructor(private readonly messageService: MessageService) {}
 
-    // Quand un utilisateur rejoint une conversation
     @SubscribeMessage('joinConversation')
     handleJoin(@ConnectedSocket() client: Socket, @MessageBody() conversationId: string) {
-        client.join(conversationId); // il rejoint la "room" de cette conversation
+        client.join(conversationId);
+        console.log(`👥 Client ${client.id} rejoint la conv ${conversationId}`);
     }
 
-    // Quand un message est envoyé
     @SubscribeMessage('sendMessage')
     async handleMessage(
         @ConnectedSocket() client: Socket,
         @MessageBody()
         data: { conversationId: string; content: string; clerkUserId: string },
     ) {
-        // Sauvegarde en base
-        const user = await this.prisma.user.findUnique({
-            where: { clerkId: data.clerkUserId },
-        });
-        if (!user) return;
-
-        const message = await this.prisma.message.create({
-            data: {
+        try {
+            const message = await this.messageService.sendMessage(data.clerkUserId, {
                 content: data.content,
                 conversationId: data.conversationId,
-                authorId: user.id,
-            },
-            include: { author: true },
-        });
+            });
 
-        // Envoie à tous les membres de la conversation
-        this.server.to(data.conversationId).emit('newMessage', message);
+            this.server.to(data.conversationId).emit('newMessage', message);
+
+            console.log(`💬 Message envoyé dans conv ${data.conversationId} par ${data.clerkUserId}`);
+        } catch (error) {
+            console.error('❌ Erreur dans handleMessage:', error);
+            client.emit('error', { message: 'Erreur lors de l’envoi du message' });
+        }
     }
 }

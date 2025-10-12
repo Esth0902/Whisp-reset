@@ -1,4 +1,10 @@
-import { Controller, Get, Patch, Param, Req, UseGuards } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Patch,
+    Req,
+    UseGuards,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClerkAuthGuard } from '../clerk/clerk-auth.guard';
 
@@ -7,25 +13,32 @@ import { ClerkAuthGuard } from '../clerk/clerk-auth.guard';
 export class NotificationController {
     constructor(private prisma: PrismaService) {}
 
-    // Récupérer toutes les notifications de l'utilisateur connecté
     @Get()
-    async getMyNotifications(@Req() req) {
+    async getUnread(@Req() req) {
         const user = await this.prisma.user.findUniqueOrThrow({
             where: { clerkId: req.clerkUserId },
         });
 
         return this.prisma.notification.findMany({
-            where: { userId: user.id },
+            where: {
+                userId: user.id,
+                read: false,
+            },
             orderBy: { createdAt: 'desc' },
         });
     }
+    
+    @Patch('mark-read')
+    async markAllAsRead(@Req() req) {
+        const user = await this.prisma.user.findUniqueOrThrow({
+            where: { clerkId: req.clerkUserId },
+        });
 
-    // Marquer une notif comme lue
-    @Patch(':id/read')
-    async markAsRead(@Param('id') id: string) {
-        return this.prisma.notification.update({
-            where: { id },
+        await this.prisma.notification.updateMany({
+            where: { userId: user.id, read: false },
             data: { read: true },
         });
+
+        return { success: true };
     }
 }
