@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from '@clerk/nextjs';
+import { ClerkProvider } from "@clerk/nextjs";
 import Header from "@/component/header";
 import Footer from "@/component/footer";
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -23,25 +23,22 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
                                        children,
-                                   }: Readonly<{
-    children: React.ReactNode;
-}>) {
+                                   }: Readonly<{ children: React.ReactNode }>) {
     return (
-        <html lang="fr">
-        <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50`}
-        >
         <ClerkProvider>
+            <html lang="fr">
+            <body
+                className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50`}
+            >
             <Header />
             <main className="flex-grow container mx-auto px-4 py-8">
                 {children}
             </main>
             <Footer />
-            {/* 🔔 Notifications globales */}
             <Toaster position="top-right" />
+            </body>
+            </html>
         </ClerkProvider>
-        </body>
-        </html>
     );
 }
 
