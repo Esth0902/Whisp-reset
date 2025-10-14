@@ -1,1 +1,39 @@
+name: Backend CI
 
+on:
+  pull_request:
+    paths:
+      - 'messagerie-backend/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'messagerie-backend/**'
+
+jobs:
+  backend-checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: messagerie-backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run tests
+        run: npm run test
