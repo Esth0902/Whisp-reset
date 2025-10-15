@@ -64,7 +64,7 @@ export default function FriendsPage() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
     async function respondInvitation(id: string, status: 'accepted' | 'declined') {
         try {
