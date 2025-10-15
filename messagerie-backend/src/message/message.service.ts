@@ -35,7 +35,7 @@ export class MessageService {
         const user = await this.prisma.user.findUnique({
             where: { clerkId: userId },
         });
-        if (!user) throw new Error("Utilisateur non trouvé");
+        if (!user) throw new Error("Utilisateur non trouvé !");
 
 
         return this.prisma.message.create({
