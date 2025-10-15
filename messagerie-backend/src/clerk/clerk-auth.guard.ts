@@ -1,15 +1,20 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { verifyToken } from '@clerk/clerk-sdk-node';
+import { Request } from 'express';
+
+interface AuthenticatedRequest extends Request {
+    clerkUserId?: string;
+}
 
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        const req = context.switchToHttp().getRequest();
-        const authHeader = req.headers['authorization'];
+        const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
+        const authHeader = req.headers['authorization'];
         console.log('Authorization header:', authHeader);
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
             console.warn('Missing or malformed Authorization header');
             throw new UnauthorizedException('Missing or malformed Authorization header');
         }
@@ -19,9 +24,10 @@ export class ClerkAuthGuard implements CanActivate {
 
         try {
             const payload = await verifyToken(token, {
-                secretKey: process.env.CLERK_SECRET_KEY!,
-                issuer: process.env.CLERK_ISSUER!,
+                secretKey: process.env.CLERK_SECRET_KEY ?? '',
+                issuer: process.env.CLERK_ISSUER ?? '',
             });
+
             console.log('Token successfully verified:', payload);
 
             if (!payload.sub) {
@@ -30,7 +36,6 @@ export class ClerkAuthGuard implements CanActivate {
             }
 
             req.clerkUserId = payload.sub;
-
             return true;
         } catch (err) {
             console.error('Token verification failed:', err);

@@ -3,6 +3,12 @@ import { FriendshipService } from './friendship.service';
 import { CreateFriendshipDto } from './dto/create-friendship.dto';
 import { RespondFriendshipDto } from './dto/respond-friendship.dto';
 import { ClerkAuthGuard } from '../clerk/clerk-auth.guard';
+import { Request } from 'express';
+
+// On définit une interface typée pour les requêtes authentifiées
+interface AuthenticatedRequest extends Request {
+    clerkUserId?: string;
+}
 
 @UseGuards(ClerkAuthGuard)
 @Controller('friendships')
@@ -11,9 +17,12 @@ export class FriendshipController {
 
     // Envoyer une invitation
     @Post()
-    async sendInvitation(@Req() req, @Body() createDto: CreateFriendshipDto) {
-        // req.clerkUserId est le clerkId de l'utilisateur connecté
-        return this.friendshipService.sendInvitation(req.clerkUserId, createDto.friendName);
+    async sendInvitation(@Req() req: AuthenticatedRequest, @Body() createDto: CreateFriendshipDto) {
+        const userId = req.clerkUserId;
+        if (!userId) {
+            throw new Error('User not authenticated');
+        }
+        return this.friendshipService.sendInvitation(userId, createDto.friendName);
     }
 
     // Répondre à une invitation
@@ -24,13 +33,21 @@ export class FriendshipController {
 
     // Lister amis confirmés
     @Get('friends')
-    async getFriends(@Req() req) {
-        return this.friendshipService.getFriends(req.clerkUserId);
+    async getFriends(@Req() req: AuthenticatedRequest) {
+        const userId = req.clerkUserId;
+        if (!userId) {
+            throw new Error('User not authenticated');
+        }
+        return this.friendshipService.getFriends(userId);
     }
 
     // Lister invitations en attente reçues
     @Get('invitations')
-    async getPendingInvitations(@Req() req) {
-        return this.friendshipService.getPendingInvitations(req.clerkUserId);
+    async getPendingInvitations(@Req() req: AuthenticatedRequest) {
+        const userId = req.clerkUserId;
+        if (!userId) {
+            throw new Error('User not authenticated');
+        }
+        return this.friendshipService.getPendingInvitations(userId);
     }
 }

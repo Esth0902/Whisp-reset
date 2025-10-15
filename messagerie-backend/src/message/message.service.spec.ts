@@ -4,7 +4,6 @@ import { PrismaService } from '../prisma/prisma.service';
 
 describe('MessageService', () => {
   let service: MessageService;
-  let prisma: PrismaService;
 
   const mockPrisma = {
     conversation: {
@@ -31,7 +30,6 @@ describe('MessageService', () => {
     }).compile();
 
     service = module.get<MessageService>(MessageService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
