@@ -6,7 +6,7 @@ on:
       - 'messagerie-backend/**'
   push:
     branches:
-      - main
+      - master
     paths:
       - 'messagerie-backend/**'
 
