@@ -19,8 +19,9 @@ jobs:
 
     env:
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-      NEXT_PUBLIC_SOCKET_URL: ${{ secrets.NEXT_PUBLIC_SOCKET_URL }}
-      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      CLERK_ISSUER: ${{ secrets.CLERK_ISSUER }}
+      # (Ajoute ici toutes les autres variables nécessaires, ex: NEXT_PUBLIC_API_URL, etc.)
 
     steps:
       - name: Checkout code
@@ -32,7 +33,7 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run linter
         run: npm run lint
