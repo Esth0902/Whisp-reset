@@ -1,11 +1,12 @@
 module.exports = {
-    testEnvironment: 'jest-environment-jsdom',
-    setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
-        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        '^@clerk/nextjs$': '<rootDir>/__mocks__/@clerk/nextjs.ts',
+        '^next/(.*)$': '<rootDir>/__mocks__/next/$1.ts',
     },
     transform: {
-        '^.+\\.(ts|tsx)$': 'babel-jest',
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: './babel.jest.config.js' }],
     },
+    setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+    testEnvironment: 'jsdom',
 };

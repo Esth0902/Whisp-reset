@@ -62,11 +62,14 @@ export default function HomePage() {
                 </p>
 
                 <SignedOut>
-                    <SignInButton>
-                        <button className="bg-blue-600 text-white px-6 py-3 rounded-full text-lg hover:bg-blue-700 transition">
-                            🚀 Essayez gratuitement dès maintenant
-                        </button>
-                    </SignInButton>
+
+                    <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL}/sign-up`}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-full text-lg hover:bg-blue-700 transition"
+                    >
+                        🚀 Essayez gratuitement dès maintenant
+                    </a>
+
                 </SignedOut>
 
                 <SignedIn>
