@@ -1,3 +1,5 @@
+import {PropsWithChildren} from "react";
+
 export const useUser = jest.fn(() => ({
     isLoaded: true,
     isSignedIn: true,
@@ -16,4 +18,5 @@ export const useAuth = jest.fn(() => ({
     getToken: jest.fn(() => Promise.resolve("fake-token")),
 }));
 
-export const ClerkProvider = ({ children }: any) => children;
+
+export const ClerkProvider = ({ children }: PropsWithChildren) => children;
