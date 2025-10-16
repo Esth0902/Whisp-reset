@@ -35,7 +35,7 @@ export default function PricingSection() {
 
 
                     <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}/sign-up`}
+                        href="/sign-up"
                         className="mt-4 inline-block bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition"
                     >
                         Commencez votre essai gratuit
