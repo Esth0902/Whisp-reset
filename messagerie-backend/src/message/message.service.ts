@@ -2,22 +2,29 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
+type SendMessageDto = {
+    content: string;
+    conversationId?: string;
+    recipientId?: string;
+};
+
 @Injectable()
 export class MessageService {
     constructor(
         private prisma: PrismaService,
-        private realtime: RealtimeGateway, // 👈 ajout injection socket
+        private realtime: RealtimeGateway,
     ) {}
 
-    async sendMessage(userClerkId: string, body: any) {
+    async sendMessage(userClerkId: string, body: SendMessageDto) {
         const { content, conversationId, recipientId } = body;
-        let convId = conversationId;
+        let convId: string | null = conversationId ?? null;
 
         const author = await this.prisma.user.findUnique({
             where: { clerkId: userClerkId },
         });
         if (!author) throw new Error('Utilisateur non trouvé');
 
+        // Si pas d'ID de conversation, on en crée une
         if (!convId && recipientId) {
             const existing = await this.prisma.conversation.findFirst({
                 where: {
@@ -48,11 +55,15 @@ export class MessageService {
             }
         }
 
+        if (!convId) {
+            throw new Error('Impossible de déterminer la conversation cible.');
+        }
+
         const message = await this.prisma.message.create({
             data: {
                 content,
                 authorId: author.id,
-                conversationId: convId,
+                conversationId: convId, // ✅ garanti d’être défini ici
             },
             include: {
                 author: { select: { name: true, clerkId: true } },
