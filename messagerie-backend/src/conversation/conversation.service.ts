@@ -89,10 +89,7 @@ export class ConversationService {
         }
 
         const recipientNames = recipients.map((r) => r.name).filter(Boolean);
-        const convTitle =
-            recipientNames.length > 0
-                ? `Conversation avec ${recipientNames.join(', ')}`
-                : 'Nouvelle conversation';
+        const convTitle = "Nouvelle conversation"
 
         // ✅ Créer la nouvelle conversation
         return this.prisma.conversation.create({
