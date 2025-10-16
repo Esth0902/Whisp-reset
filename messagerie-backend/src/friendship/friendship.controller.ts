@@ -9,26 +9,21 @@ import { ClerkAuthGuard } from '../clerk/clerk-auth.guard';
 export class FriendshipController {
     constructor(private friendshipService: FriendshipService) {}
 
-    // Envoyer une invitation
     @Post()
     async sendInvitation(@Req() req, @Body() createDto: CreateFriendshipDto) {
-        // req.clerkUserId est le clerkId de l'utilisateur connecté
         return this.friendshipService.sendInvitation(req.clerkUserId, createDto.friendName);
     }
 
-    // Répondre à une invitation
     @Patch(':id/respond')
     async respondInvitation(@Param('id') id: string, @Body() respondDto: RespondFriendshipDto) {
         return this.friendshipService.respondInvitation(id, respondDto.status);
     }
 
-    // Lister amis confirmés
     @Get('friends')
     async getFriends(@Req() req) {
         return this.friendshipService.getFriends(req.clerkUserId);
     }
 
-    // Lister invitations en attente reçues
     @Get('invitations')
     async getPendingInvitations(@Req() req) {
         return this.friendshipService.getPendingInvitations(req.clerkUserId);

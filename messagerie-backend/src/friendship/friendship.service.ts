@@ -82,6 +82,7 @@ export class FriendshipService {
         this.realtime.notifyUser(invitation.friend.clerkId, 'friendship.requested', {
             id: invitation.id,
             from: invitation.user.name ?? invitation.user.clerkId,
+            fromClerkId: invitation.user.clerkId, // 👈 ajouté
         });
 
         return invitation;
@@ -126,6 +127,7 @@ export class FriendshipService {
 
             this.realtime.notifyUser(updated.user.clerkId, 'friendship.accepted', {
                 by: updated.friend.name ?? updated.friend.clerkId,
+                fromClerkId: updated.friend.clerkId, // 👈 ajouté
                 status: 'accepted',
             });
 
@@ -151,6 +153,7 @@ export class FriendshipService {
 
             this.realtime.notifyUser(deleted.user.clerkId, 'friendship.declined', {
                 by: deleted.friend.name ?? deleted.friend.clerkId,
+                fromClerkId: deleted.friend.clerkId, // 👈 ajouté
                 status: 'declined',
             });
 
