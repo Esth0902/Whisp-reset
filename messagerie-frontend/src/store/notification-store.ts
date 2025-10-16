@@ -10,6 +10,16 @@ export type NotificationItem = {
     fromClerkId?: string;
 };
 
+type NotificationResponse = {
+    id: string;
+    type: string;
+    message: string;
+    createdAt: string;
+    read?: boolean;
+    link?: string;
+    fromClerkId?: string;
+};
+
 type State = {
     notifications: NotificationItem[];
 
@@ -18,7 +28,6 @@ type State = {
     addNotification: (item: NotificationItem) => void;
     clearNotifications: () => void;
 
-    // 🔥 Nouvelles actions serveur
     loadFromServer: (token: string) => Promise<void>;
     markAllAsRead: (token: string) => Promise<void>;
 };
@@ -47,22 +56,19 @@ export const useNotificationStore = create<State>((set) => ({
 
     clearNotifications: () => set({ notifications: [] }),
 
-    // 🔹 Charger les notifications non lues depuis le backend
     loadFromServer: async (token: string) => {
         try {
-            const res = await fetch('http://localhost:4000/notifications', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error('Erreur de chargement des notifications');
 
-            const data = await res.json();
+            const data: NotificationResponse[] = await res.json();
+
             set({
-                notifications: data.map((n: any) => ({
-                    id: n.id,
-                    type: n.type,
-                    message: n.message,
+                notifications: data.map((n) => ({
+                    ...n,
                     createdAt: new Date(n.createdAt),
-                    read: n.read,
                 })),
             });
         } catch (err) {
@@ -70,10 +76,9 @@ export const useNotificationStore = create<State>((set) => ({
         }
     },
 
-    // 🔹 Marquer toutes les notifications comme lues
     markAllAsRead: async (token: string) => {
         try {
-            const res = await fetch('http://localhost:4000/notifications/mark-read', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/mark-read`, {
                 method: 'PATCH',
                 headers: { Authorization: `Bearer ${token}` },
             });
