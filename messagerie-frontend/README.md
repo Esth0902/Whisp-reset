@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💬 Whisp
+Projet de messagerie en temps réel – Développement Web Fullstack
 
-## Getting Started
+## 🌐 Lien du projet en ligne
+🔗 [https://whisp-reset.onrender.com/](https://whisp-reset.onrender.com/)
 
-First, run the development server:
+---
 
+## 🧩 Description du projet
+
+**Whisp** est une application de messagerie en temps réel développée dans le cadre de notre cours de **développement web fullstack**.  
+Elle permet aux utilisateurs de s’inscrire, se connecter, discuter entre eux, et recevoir des notifications instantanément.
+
+L’objectif principal était de créer une application complète avec **authentification, base de données, messagerie temps réel et interface responsive**.
+
+---
+
+## 🚀 Fonctionnalités principales
+
+- 🔐 **Authentification sécurisée** via **Clerk** (inscription, connexion, déconnexion)
+- 💬 **Messagerie en temps réel** avec **Socket.io**
+- 👥 **Gestion des contacts et conversations**
+    - Création de conversation
+    - Ajout ou suppression de contacts
+    - Envoi de messages
+    - Recherche de contacts
+    - Historique des messages
+    - Rôles dans la conversation (**admin**, **membre**)
+    - L’admin peut renommer ou supprimer la conversation
+- 🔔 **Notifications en temps réel**
+- 📱 **Interface responsive**
+
+---
+
+## 🛠️ Technologies utilisées
+
+### **Frontend (Next.js)**
+- **Next.js** 15
+- **React** 19
+- **Clerk** (authentification)
+- **Socket.io** (temps réel)
+- **Tailwind CSS** 
+- **Lucide React** 
+
+### **Backend (NestJS)**
+- **NestJS** 11
+- **Prisma** (accès base de données)
+- **PostgreSQL** (base de données sur Render)
+- **Socket.io** (communication temps réel)
+
+---
+
+## ⚙️ Installation et lancement local
+
+### 🔧 Prérequis
+- Node.js (v18+ recommandé)
+- PostgreSQL
+- Un compte **Clerk** (pour les clés d’API)
+
+### 1️⃣ Cloner le projet
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/ton-compte/whisp.git
+cd whisp
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2️⃣ Installer les dépendances
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+####  Frontend
+```bash
+cd messagerie-frontend
+npm install
+```
+####  Backend  
+```bash
+cd messagerie-backend
+npm install
+```
+### 3️⃣ Configurer les variables d’environnement
+Créer un fichier .env dans chaque dossier :
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### - Backend (.env)
+DATABASE_URL="ta_database"
+CLERK_SECRET_KEY="ta_clé_clerk"
 
-## Learn More
+#### - Frontend (.env.local)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="ta_clé_clerk"
+NEXT_PUBLIC_API_URL="http://localhost:3000" (local)
 
-To learn more about Next.js, take a look at the following resources:
+### 4️⃣ Lancer le projet
+#### - Backend (.env)
+```bash
+npm run start:dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### - Frontend (.env.local)
+```bash
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🧪 Tests
+Les tests unitaires et d’intégration sont réalisés avec Jest sur le frontend et le backend.
+Des vérifications automatiques sont exécutées à chaque push via GitHub Actions (CI/CD).
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 👩‍💻 Auteur
+Projet réalisé par :
+- Esther Stassin
+- Laetitia Voué

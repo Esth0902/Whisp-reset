@@ -1,6 +1,11 @@
 import { Controller, Get, Patch, Param, Req, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClerkAuthGuard } from '../clerk/clerk-auth.guard';
+import { Request } from 'express';
+
+interface AuthenticatedRequest extends Request {
+    clerkUserId: string;
+}
 
 @Controller('notifications')
 @UseGuards(ClerkAuthGuard)
@@ -9,7 +14,7 @@ export class NotificationController {
 
     // Récupérer toutes les notifications de l'utilisateur connecté
     @Get()
-    async getMyNotifications(@Req() req) {
+    async getMyNotifications(@Req() req: AuthenticatedRequest) {
         const user = await this.prisma.user.findUniqueOrThrow({
             where: { clerkId: req.clerkUserId },
         });

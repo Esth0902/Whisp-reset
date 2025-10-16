@@ -1,4 +1,5 @@
 import Pricing from "@/component/pricing";
+
 export default function PricingPage() {
     return (
         <main className="min-h-screen bg-white text-gray-800">

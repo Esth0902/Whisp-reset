@@ -1,7 +1,11 @@
-import {Controller, Get, Req, Post, Body, Delete,Param,Patch, UnauthorizedException} from '@nestjs/common';
+import { Controller, Get, Req, Post, Body, Delete, Param, Patch, UseGuards } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
-import { UseGuards } from '@nestjs/common';
 import { ClerkAuthGuard } from '../clerk/clerk-auth.guard';
+import { Request } from 'express';
+
+interface AuthenticatedRequest extends Request {
+    clerkUserId?: string;
+}
 
 @Controller('conversations')
 @UseGuards(ClerkAuthGuard)
@@ -9,27 +13,45 @@ export class ConversationController {
     constructor(private readonly conversationService: ConversationService) {}
 
     @Get('me')
-    getMyConversations(@Req() req: any) {
-        return this.conversationService.getUserConversations(req.ClerkUserId);
+    getMyConversations(@Req() req: AuthenticatedRequest) {
+        const userId = req.clerkUserId;
+        if (!userId) {
+            throw new Error('User not authenticated');
+        }
+        return this.conversationService.getUserConversations(userId);
     }
 
     @Post()
     async createConversation(
         @Body() dto: { recipientIds: string[] },
-        @Req() req: any,
+        @Req() req: AuthenticatedRequest,
     ) {
-        return this.conversationService.createConversation(req.clerkUserId, dto.recipientIds);
+        const userId = req.clerkUserId;
+        if (!userId) {
+            throw new Error('User not authenticated');
+        }
+        return this.conversationService.createConversation(userId, dto.recipientIds);
     }
 
     @Delete(':id')
-    async deleteConversation(@Param('id') id: string, @Req() req: any) {
-        return this.conversationService.deleteConversation(id, req.clerkUserId);
+    async deleteConversation(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+        const userId = req.clerkUserId;
+        if (!userId) {
+            throw new Error('User not authenticated');
+        }
+        return this.conversationService.deleteConversation(id, userId);
     }
 
     @Patch(':id')
     async renameConversation(
         @Param('id') id: string,
         @Body('title') title: string,
-        @Req() req: any,)
-    {return this.conversationService.renameConversation(id, req.clerkUserId, title);
-    }}
+        @Req() req: AuthenticatedRequest,
+    ) {
+        const userId = req.clerkUserId;
+        if (!userId) {
+            throw new Error('User not authenticated');
+        }
+        return this.conversationService.renameConversation(id, userId, title);
+    }
+}

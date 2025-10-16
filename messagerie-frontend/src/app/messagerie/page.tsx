@@ -55,7 +55,7 @@ export default function MessengerPage() {
             if (Array.isArray(data) && data.length > 0) setActiveId(data[0].id);
         };
         void fetchConversations();
-    }, []);
+    }, [getToken]);
 
     useEffect(() => {
         if (!activeId) return;
@@ -84,7 +84,7 @@ export default function MessengerPage() {
             setFriends(Array.isArray(data) ? data : []);
         };
         void fetchFriends();
-    }, []);
+    }, [getToken]);
 
     const activeConv = conversations.find((c) => c.id === activeId);
 
