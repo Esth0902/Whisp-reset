@@ -14,23 +14,31 @@ export class NotificationController {
 
     // Récupérer toutes les notifications de l'utilisateur connecté
     @Get()
-    async getMyNotifications(@Req() req: AuthenticatedRequest) {
+    async getUnread(@Req() req) {
         const user = await this.prisma.user.findUniqueOrThrow({
             where: { clerkId: req.clerkUserId },
         });
 
         return this.prisma.notification.findMany({
-            where: { userId: user.id },
+            where: {
+                userId: user.id,
+                read: false,
+            },
             orderBy: { createdAt: 'desc' },
         });
     }
 
-    // Marquer une notif comme lue
-    @Patch(':id/read')
-    async markAsRead(@Param('id') id: string) {
-        return this.prisma.notification.update({
-            where: { id },
+    @Patch('mark-read')
+    async markAllAsRead(@Req() req) {
+        const user = await this.prisma.user.findUniqueOrThrow({
+            where: { clerkId: req.clerkUserId },
+        });
+
+        await this.prisma.notification.updateMany({
+            where: { userId: user.id, read: false },
             data: { read: true },
         });
+
+        return { success: true };
     }
 }

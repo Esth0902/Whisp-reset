@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "set NEXT_PROJECT_DIR=./ && next dev",
+    "build": "set NEXT_PROJECT_DIR=./ && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "jest"
