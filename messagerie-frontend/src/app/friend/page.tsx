@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import FriendInvitationForm from '@/component/friendinvitationform';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useRealtime } from '@/hooks/useRealtime';
@@ -30,7 +30,7 @@ export default function FriendsPage() {
 
     useRealtime(userId ?? undefined);
 
-    async function fetchData() {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         setError(null);
 
@@ -60,7 +60,7 @@ export default function FriendsPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [getToken]);
 
     useEffect(() => {
         fetchData();
@@ -79,6 +79,7 @@ export default function FriendsPage() {
             });
 
             if (!res.ok) throw new Error('Erreur lors de la réponse');
+
             fetchData();
         } catch (err) {
             alert('Erreur: ' + (err as Error).message);
