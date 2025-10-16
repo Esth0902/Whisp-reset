@@ -1,6 +1,8 @@
 'use client';
 
 import { SignInButton } from '@clerk/nextjs';
+import Link from "next/link";
+import React from "react";
 
 export default function PricingSection() {
     return (
@@ -33,14 +35,12 @@ export default function PricingSection() {
                     </ul>
                     <p className="mt-6 text-2xl font-bold text-blue-700">9,99 €/mois</p>
 
-
-                    <a
+                    <Link
                         href="/sign-up"
                         className="mt-4 inline-block bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition"
                     >
                         Commencez votre essai gratuit
-                    </a>
-
+                    </Link>
 
                 </div>
             </div>
