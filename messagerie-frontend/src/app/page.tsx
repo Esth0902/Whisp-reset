@@ -7,8 +7,9 @@ import {
     SignedOut,
     SignInButton,
 } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Pricing from '@/component/pricing';
+import Link from "next/link";
 
 export default function HomePage() {
     const { user, isSignedIn } = useUser();
@@ -62,14 +63,13 @@ export default function HomePage() {
                 </p>
 
                 <SignedOut>
-
-                    <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}/sign-up`}
+                    <Link
+                        href="/sign-up"
                         className="bg-blue-600 text-white px-6 py-3 rounded-full text-lg hover:bg-blue-700 transition"
                     >
                         🚀 Essayez gratuitement dès maintenant
-                    </a>
 
+                    </Link>
                 </SignedOut>
 
                 <SignedIn>
