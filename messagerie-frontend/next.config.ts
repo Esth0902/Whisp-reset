@@ -1,8 +1,8 @@
-const path = require("path");
+import path from "path";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    outputFileTracingRoot: path.join(__dirname),
+    outputFileTracingRoot: path.join(process.cwd()),
 
     async rewrites() {
         return [
@@ -17,4 +17,4 @@ const nextConfig = {
     },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
