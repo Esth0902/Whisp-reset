@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import FriendInvitationForm from '@/component/friendinvitationform';
 import { useAuth, useUser } from '@clerk/nextjs';
-import { useRealtime } from '@/hooks/useRealtime';
 
 type User = {
     clerkId: string;
@@ -20,15 +19,10 @@ type FriendshipInvitation = {
 
 export default function FriendsPage() {
     const { getToken } = useAuth();
-    const { user } = useUser();
-    const userId = user?.id;
-
     const [pendingInvitations, setPendingInvitations] = useState<FriendshipInvitation[]>([]);
     const [friends, setFriends] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    useRealtime(userId ?? undefined);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
