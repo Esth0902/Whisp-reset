@@ -5,12 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ConversationService {
     constructor(private prisma: PrismaService) {}
 
-    /**
-     * 🔹 Récupère toutes les conversations de l'utilisateur connecté
-     * @param clerkId L'identifiant Clerk de l'utilisateur
-     */
     async getUserConversations(clerkId: string) {
-        // Trouver l'utilisateur via son Clerk ID
         const user = await this.prisma.user.findUnique({
             where: { clerkId },
         });
@@ -19,7 +14,6 @@ export class ConversationService {
             throw new UnauthorizedException('Utilisateur introuvable');
         }
 
-        // Charger toutes les conversations où il participe
         return this.prisma.conversation.findMany({
             where: {
                 users: {
@@ -39,9 +33,6 @@ export class ConversationService {
         });
     }
 
-    /**
-     * 🔹 Crée une nouvelle conversation
-     */
     async createConversation(adminClerkId: string, recipientIds: string[] | string) {
         const ids = Array.isArray(recipientIds) ? recipientIds : [recipientIds];
 
@@ -49,15 +40,12 @@ export class ConversationService {
             throw new BadRequestException('Vous devez sélectionner au moins un ami.');
         }
 
-        // Récupérer l'admin (utilisateur courant)
         const admin = await this.prisma.user.findUnique({
             where: { clerkId: adminClerkId },
         });
         if (!admin) {
             throw new UnauthorizedException('Admin introuvable');
         }
-
-        // Récupérer les destinataires
         const recipients = await this.prisma.user.findMany({
             where: { clerkId: { in: ids } },
         });
@@ -68,7 +56,6 @@ export class ConversationService {
 
         const allUserIds = [admin.id, ...recipients.map((r) => r.id)].sort();
 
-        // Vérifie si une conversation avec EXACTEMENT ces utilisateurs existe déjà
         const existingConvs = await this.prisma.conversation.findMany({
             where: {
                 AND: allUserIds.map((id) => ({
@@ -88,10 +75,8 @@ export class ConversationService {
             }
         }
 
-        const recipientNames = recipients.map((r) => r.name).filter(Boolean);
         const convTitle = "Nouvelle conversation"
 
-        // ✅ Créer la nouvelle conversation
         return this.prisma.conversation.create({
             data: {
                 title: convTitle,
@@ -108,9 +93,6 @@ export class ConversationService {
         });
     }
 
-    /**
-     * 🔹 Supprime une conversation (seulement par un admin)
-     */
     async deleteConversation(conversationId: string, clerkUserId: string) {
         const user = await this.prisma.user.findUnique({
             where: { clerkId: clerkUserId },
@@ -128,9 +110,6 @@ export class ConversationService {
         return this.prisma.conversation.delete({ where: { id: conversationId } });
     }
 
-    /**
-     * 🔹 Renomme une conversation (seulement par un admin)
-     */
     async renameConversation(conversationId: string, clerkUserId: string, title: string) {
         const user = await this.prisma.user.findUnique({
             where: { clerkId: clerkUserId },
