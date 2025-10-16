@@ -5,10 +5,9 @@ import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 describe('MessageService', () => {
   let service: MessageService;
-  let prisma: PrismaService;
 
   const mockRealtimeGateway = {
-    handleNewMessage: jest.fn(), // mock d'une méthode fictive si elle est appelée
+    handleNewMessage: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -16,12 +15,11 @@ describe('MessageService', () => {
       providers: [
         MessageService,
         PrismaService,
-        { provide: RealtimeGateway, useValue: mockRealtimeGateway }, // ✅ ajout important
+        { provide: RealtimeGateway, useValue: mockRealtimeGateway },
       ],
     }).compile();
 
     service = module.get<MessageService>(MessageService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
