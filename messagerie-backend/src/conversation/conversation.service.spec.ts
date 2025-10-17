@@ -3,33 +3,21 @@ import { ConversationService } from './conversation.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UnauthorizedException } from '@nestjs/common';
 
-interface MockPrisma {
-  user: {
-    findUnique: jest.Mock<Promise<{ id: string; clerkId: string } | null>, [string]>;
-    findMany: jest.Mock<Promise<Array<{ id: string; clerkId: string }>>, [string[]]>;
-  };
-  conversation: {
-    findMany: jest.Mock<Promise<any[]>, [any?]>;
-    create: jest.Mock<Promise<{ id: string; title: string | null }>, [any]>;
-  };
-}
-
 describe('ConversationService', () => {
   let service: ConversationService;
-  let prisma: MockPrisma;
+
+  const mockPrisma = {
+    user: {
+      findUnique: jest.fn<Promise<{ id: string; clerkId: string } | null>, [object]>(),
+      findMany: jest.fn<Promise<Array<{ id: string; clerkId: string }>>, [object]>(),
+    },
+    conversation: {
+      findMany: jest.fn<Promise<Array<{ id: string; title: string | null }>>, [object?]>(),
+      create: jest.fn<Promise<{ id: string; title: string | null }>, [object]>(),
+    },
+  };
 
   beforeEach(async () => {
-    const mockPrisma: MockPrisma = {
-      user: {
-        findUnique: jest.fn<Promise<{ id: string; clerkId: string } | null>, [string]>(),
-        findMany: jest.fn<Promise<Array<{ id: string; clerkId: string }>>, [string[]]>(),
-      },
-      conversation: {
-        findMany: jest.fn<Promise<any[]>, [any?]>(),
-        create: jest.fn<Promise<{ id: string; title: string | null }>, [any]>(),
-      },
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConversationService,
@@ -38,7 +26,6 @@ describe('ConversationService', () => {
     }).compile();
 
     service = module.get<ConversationService>(ConversationService);
-    prisma = mockPrisma;
   });
 
   it('doit être défini', () => {
@@ -46,7 +33,7 @@ describe('ConversationService', () => {
   });
 
   it('affiche un UnauthorizedException si admin introuvable', async () => {
-    prisma.user.findUnique.mockResolvedValueOnce(null);
+    mockPrisma.user.findUnique.mockResolvedValueOnce(null);
 
     await expect(
         service.createConversation('adminClerk', ['friendClerk']),
@@ -54,21 +41,18 @@ describe('ConversationService', () => {
   });
 
   it('crée une conversation avec admin et ami', async () => {
-    prisma.user.findUnique.mockResolvedValueOnce({ id: '1', clerkId: 'adminClerk' });
-    prisma.user.findMany.mockResolvedValueOnce([{ id: '2', clerkId: 'friendClerk' }]);
-    prisma.conversation.findMany.mockResolvedValueOnce([]);
-    prisma.conversation.create.mockResolvedValueOnce({
+    mockPrisma.user.findUnique.mockResolvedValueOnce({ id: '1', clerkId: 'adminClerk' });
+    mockPrisma.user.findMany.mockResolvedValueOnce([{ id: '2', clerkId: 'friendClerk' }]);
+    mockPrisma.conversation.findMany.mockResolvedValueOnce([]);
+    mockPrisma.conversation.create.mockResolvedValueOnce({
       id: 'conv1',
       title: 'Nouvelle conversation',
     });
 
-    const result: { id: string; title: string | null } = await service.createConversation(
-        'adminClerk',
-        ['friendClerk'],
-    );
+    const result = await service.createConversation('adminClerk', ['friendClerk']);
 
     expect(result).toEqual({ id: 'conv1', title: 'Nouvelle conversation' });
-    expect(prisma.conversation.create).toHaveBeenCalledWith(
+    expect(mockPrisma.conversation.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             title: 'Nouvelle conversation',
