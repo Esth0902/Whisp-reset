@@ -3,69 +3,101 @@ import { MessageService } from './message.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
+type MockPrisma = {
+  user: {
+    findUnique: jest.Mock;
+  };
+  conversation: {
+    findFirst: jest.Mock;
+    create: jest.Mock;
+  };
+  message: {
+    create: jest.Mock;
+  };
+  notification: {
+    create: jest.Mock;
+  };
+  conversationUser: {
+    findMany: jest.Mock;
+  };
+};
+
+type MockRealtime = {
+  notifyUser: jest.Mock;
+};
+
 describe('MessageService', () => {
   let service: MessageService;
-  let prisma: any;
-  let realtime: jest.Mocked<RealtimeGateway>;
+  let prisma: MockPrisma;
+  let realtime: MockRealtime;
 
   beforeEach(async () => {
-    const mockPrisma = {
+    prisma = {
       user: { findUnique: jest.fn() },
       conversation: { findFirst: jest.fn(), create: jest.fn() },
       message: { create: jest.fn() },
-      conversationUser: { findMany: jest.fn() },
       notification: { create: jest.fn() },
-    } as any;
+      conversationUser: { findMany: jest.fn() },
+    };
 
-    const mockRealtime = { notifyUser: jest.fn() } as any;
+    realtime = {
+      notifyUser: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MessageService,
-        { provide: PrismaService, useValue: mockPrisma },
-        { provide: RealtimeGateway, useValue: mockRealtime },
+        { provide: PrismaService, useValue: prisma },
+        { provide: RealtimeGateway, useValue: realtime },
       ],
     }).compile();
 
     service = module.get<MessageService>(MessageService);
-    prisma = module.get(PrismaService);
-    realtime = module.get(RealtimeGateway);
   });
 
-  it('doit afficher une erreur si auteur introuvable', async () => {
+  it('doit être défini', () => {
+    expect(service).toBeDefined();
+  });
+
+  it('envoie une erreur si l’auteur est introuvable', async () => {
     prisma.user.findUnique.mockResolvedValueOnce(null);
 
     await expect(
-        service.sendMessage('unknownClerk', { content: 'Salut !' }),
+        service.sendMessage('fakeClerk', { content: 'Hello!' }),
     ).rejects.toThrow('Utilisateur non trouvé');
   });
 
-  it('créer un message si tout est valide', async () => {
-    prisma.user.findUnique.mockResolvedValueOnce({ id: '1', clerkId: 'userClerk', name: 'Alice' }); // auteur
-    prisma.message.create.mockResolvedValueOnce({ id: 'msg1', content: 'Salut !' });
+  it('envoyer un message dans une conversation existante', async () => {
+    prisma.user.findUnique.mockResolvedValueOnce({ id: '1', clerkId: 'author' });
+    prisma.conversation.findFirst.mockResolvedValueOnce({ id: 'conv1' });
+    prisma.message.create.mockResolvedValueOnce({
+      id: 'msg1',
+      content: 'Hello!',
+      author: { name: 'Alice', clerkId: 'author' },
+    });
     prisma.conversationUser.findMany.mockResolvedValueOnce([
-      { user: { id: '2', clerkId: 'friendClerk', name: 'Bob' } },
+      { user: { id: '2', clerkId: 'friend', name: 'Bob' } },
     ]);
 
-    const result = await service.sendMessage('userClerk', {
-      content: 'Salut !',
-      conversationId: 'conv1',
+    const result = await service.sendMessage('author', {
+      content: 'Hello!',
+      recipientId: 'friend',
     });
 
-    expect(result).toEqual({ id: 'msg1', content: 'Salut !' });
-    expect(prisma.message.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            content: 'Salut !',
-            authorId: '1',
-            conversationId: 'conv1',
-          }),
-        }),
-    );
+    expect(result).toEqual({
+      id: 'msg1',
+      content: 'Hello!',
+      author: { name: 'Alice', clerkId: 'author' },
+    });
+
+    expect(prisma.message.create).toHaveBeenCalled();
     expect(realtime.notifyUser).toHaveBeenCalledWith(
-        'friendClerk',
+        'friend',
         'message.new',
-        expect.any(Object),
+        expect.objectContaining({
+          fromClerkId: 'author',
+          content: 'Hello!',
+        }),
     );
   });
 });

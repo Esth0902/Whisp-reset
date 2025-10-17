@@ -7,10 +7,13 @@ jest.mock('@clerk/nextjs', () => ({
     }),
 }));
 
-jest.mock('@/component/friendinvitationform', () => () => <div data-testid="mocked-form">Formulaire mocké</div>);
-
+jest.mock('@/component/friendinvitationform', () => {
+    const MockedForm = () => <div data-testid="mocked-form">Formulaire mocké</div>;
+    MockedForm.displayName = 'MockedFriendInvitationForm';
+    return MockedForm;
+});
 beforeEach(() => {
-    global.fetch = jest.fn((url: RequestInfo) => {
+    global.fetch = jest.fn((url: RequestInfo): Promise<Partial<Response>> => {
         if (typeof url === 'string' && url.includes('/api/friendships/friends')) {
             return Promise.resolve({
                 ok: true,
@@ -18,21 +21,21 @@ beforeEach(() => {
                     { clerkId: 'user-1', name: 'Alice' },
                     { clerkId: 'user-2', name: 'Bob' },
                 ],
-            }) as any;
+            });
         }
 
         if (typeof url === 'string' && url.includes('/api/friendships/invitations')) {
             return Promise.resolve({
                 ok: true,
                 json: async () => [],
-            }) as any;
+            });
         }
 
         return Promise.resolve({
             ok: true,
             json: async () => [],
-        }) as any;
-    }) as jest.Mock;
+        });
+    }) as unknown as jest.Mock;
 });
 
 afterEach(() => {
