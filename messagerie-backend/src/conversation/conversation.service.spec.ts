@@ -59,8 +59,10 @@ describe('ConversationService', () => {
       title: 'Nouvelle conversation',
     });
 
-    const result = await service.createConversation('adminClerk', ['friendClerk']);
-
+    const result: { id: string; title: string | null } = await service.createConversation(
+        'adminClerk',
+        ['friendClerk'],
+    );
     expect(result).toEqual({ id: 'conv1', title: 'Nouvelle conversation' });
     expect(prisma.conversation.create).toHaveBeenCalledWith(
         expect.objectContaining({
