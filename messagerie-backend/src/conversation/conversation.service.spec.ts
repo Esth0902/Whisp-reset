@@ -49,11 +49,11 @@ describe('ConversationService', () => {
       title: 'Nouvelle conversation',
     });
 
-    const result: { id: string; title: string | null } = await service.createConversation(
-        'adminClerk',
-        ['friendClerk'],
-    );
+
+    const result = await service.createConversation('adminClerk', ['friendClerk']);
     expect(result).toEqual({ id: 'conv1', title: 'Nouvelle conversation' });
+
+
     expect(mockPrisma.conversation.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
