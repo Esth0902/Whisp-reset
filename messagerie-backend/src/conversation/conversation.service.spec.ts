@@ -5,11 +5,11 @@ import { UnauthorizedException } from '@nestjs/common';
 
 interface MockPrisma {
   user: {
-    findUnique: jest.Mock<Promise<{ id: string; clerkId: string } | null>, [any]>;
-    findMany: jest.Mock<Promise<Array<{ id: string; clerkId: string }>>, [any]>;
+    findUnique: jest.Mock<Promise<{ id: string; clerkId: string } | null>, [string]>;
+    findMany: jest.Mock<Promise<Array<{ id: string; clerkId: string }>>, [string[]]>;
   };
   conversation: {
-    findMany: jest.Mock<Promise<any[]>, [any]>;
+    findMany: jest.Mock<Promise<any[]>, [any?]>;
     create: jest.Mock<Promise<{ id: string; title: string | null }>, [any]>;
   };
 }
@@ -21,22 +21,19 @@ describe('ConversationService', () => {
   beforeEach(async () => {
     const mockPrisma: MockPrisma = {
       user: {
-        findUnique: jest.fn(),
-        findMany: jest.fn(),
+        findUnique: jest.fn<Promise<{ id: string; clerkId: string } | null>, [string]>(),
+        findMany: jest.fn<Promise<Array<{ id: string; clerkId: string }>>, [string[]]>(),
       },
       conversation: {
-        findMany: jest.fn(),
-        create: jest.fn(),
+        findMany: jest.fn<Promise<any[]>, [any?]>(),
+        create: jest.fn<Promise<{ id: string; title: string | null }>, [any]>(),
       },
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConversationService,
-        {
-          provide: PrismaService,
-          useValue: mockPrisma,
-        },
+        { provide: PrismaService, useValue: mockPrisma },
       ],
     }).compile();
 
@@ -71,7 +68,6 @@ describe('ConversationService', () => {
     );
 
     expect(result).toEqual({ id: 'conv1', title: 'Nouvelle conversation' });
-
     expect(prisma.conversation.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
