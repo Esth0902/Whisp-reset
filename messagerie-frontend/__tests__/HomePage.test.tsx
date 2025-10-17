@@ -1,8 +1,7 @@
-/// <reference types="jest" />
 import React from 'react';
-import '@testing-library/jest-dom'; // apporte toBeInTheDocument()
+import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
-import HomePage from '../src/app/page'; // adapte le chemin si besoin
+import HomePage from '../src/app/page';
 import { PropsWithChildren } from 'react';
 
 jest.mock('@clerk/nextjs', () => ({
