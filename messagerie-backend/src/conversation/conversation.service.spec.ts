@@ -6,16 +6,18 @@ import { UnauthorizedException } from '@nestjs/common';
 describe('ConversationService', () => {
   let service: ConversationService;
 
+
   const mockPrisma = {
     user: {
-      findUnique: jest.fn<Promise<{ id: string; clerkId: string } | null>, [object]>(),
-      findMany: jest.fn<Promise<Array<{ id: string; clerkId: string }>>, [object]>(),
+      findUnique: jest.fn().mockResolvedValue({ id: '1', clerkId: 'adminClerk' }),
+      findMany: jest.fn().mockResolvedValue([{ id: '2', clerkId: 'friendClerk' }]),
     },
     conversation: {
-      findMany: jest.fn<Promise<Array<{ id: string; title: string | null }>>, [object?]>(),
-      create: jest.fn<Promise<{ id: string; title: string | null }>, [object]>(),
+      findMany: jest.fn().mockResolvedValue([]),
+      create: jest.fn().mockResolvedValue({ id: 'conv1', title: 'Nouvelle conversation' }),
     },
   };
+
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -50,7 +52,11 @@ describe('ConversationService', () => {
     });
 
 
-    const result = await service.createConversation('adminClerk', ['friendClerk']);
+
+    const result: { id: string; title: string | null } = await service.createConversation(
+        'adminClerk',
+        ['friendClerk'],
+    );
     expect(result).toEqual({ id: 'conv1', title: 'Nouvelle conversation' });
 
 
