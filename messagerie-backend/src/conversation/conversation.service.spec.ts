@@ -3,16 +3,16 @@ import { ConversationService } from './conversation.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UnauthorizedException } from '@nestjs/common';
 
-type MockPrisma = {
+interface MockPrisma {
   user: {
-    findUnique: jest.Mock;
-    findMany: jest.Mock;
+    findUnique: jest.Mock<Promise<{ id: string; clerkId: string } | null>, [any]>;
+    findMany: jest.Mock<Promise<Array<{ id: string; clerkId: string }>>, [any]>;
   };
   conversation: {
-    findMany: jest.Mock;
-    create: jest.Mock;
+    findMany: jest.Mock<Promise<any[]>, [any]>;
+    create: jest.Mock<Promise<{ id: string; title: string | null }>, [any]>;
   };
-};
+}
 
 describe('ConversationService', () => {
   let service: ConversationService;
@@ -20,8 +20,14 @@ describe('ConversationService', () => {
 
   beforeEach(async () => {
     const mockPrisma: MockPrisma = {
-      user: { findUnique: jest.fn(), findMany: jest.fn() },
-      conversation: { findMany: jest.fn(), create: jest.fn() },
+      user: {
+        findUnique: jest.fn(),
+        findMany: jest.fn(),
+      },
+      conversation: {
+        findMany: jest.fn(),
+        create: jest.fn(),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -34,7 +40,7 @@ describe('ConversationService', () => {
       ],
     }).compile();
 
-    service = module.get(ConversationService) as ConversationService;
+    service = module.get<ConversationService>(ConversationService);
     prisma = mockPrisma;
   });
 
@@ -63,7 +69,9 @@ describe('ConversationService', () => {
         'adminClerk',
         ['friendClerk'],
     );
+
     expect(result).toEqual({ id: 'conv1', title: 'Nouvelle conversation' });
+
     expect(prisma.conversation.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
