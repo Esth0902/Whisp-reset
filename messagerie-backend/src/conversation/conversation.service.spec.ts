@@ -34,8 +34,7 @@ describe('ConversationService', () => {
       ],
     }).compile();
 
-    // ✅ On type explicitement le résultat de module.get()
-    service = module.get<ConversationService>(ConversationService);
+    service = module.get(ConversationService) as ConversationService;
     prisma = mockPrisma;
   });
 
