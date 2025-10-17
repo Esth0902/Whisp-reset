@@ -19,7 +19,7 @@ describe('ConversationService', () => {
   let prisma: MockPrisma;
 
   beforeEach(async () => {
-    prisma = {
+    const mockPrisma: MockPrisma = {
       user: { findUnique: jest.fn(), findMany: jest.fn() },
       conversation: { findMany: jest.fn(), create: jest.fn() },
     };
@@ -29,12 +29,14 @@ describe('ConversationService', () => {
         ConversationService,
         {
           provide: PrismaService,
-          useValue: prisma,
+          useValue: mockPrisma,
         },
       ],
     }).compile();
 
+    // ✅ On type explicitement le résultat de module.get()
     service = module.get<ConversationService>(ConversationService);
+    prisma = mockPrisma;
   });
 
   it('doit être défini', () => {
