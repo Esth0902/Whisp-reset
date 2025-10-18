@@ -165,7 +165,7 @@ export default function MessengerPage() {
     );
 
     return (
-        <div className="h-[calc(100vh-64px)] flex bg-gray-50 text-gray-900">
+        <div className="flex-1 flex bg-gray-50 text-gray-900 min-h-0">
             {/* Sidebar */}
             <aside className="w-1/4 border-r border-gray-200 flex flex-col bg-white">
                 <div className="p-4 border-b border-gray-200">
@@ -239,7 +239,7 @@ export default function MessengerPage() {
             </aside>
 
             {/* Zone principale */}
-            <main className="flex-1 flex flex-col bg-gray-100">
+            <main className="flex-1 flex flex-col bg-gray-100 min-h-0">
                 {activeConv ? (
                     <>
                         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">

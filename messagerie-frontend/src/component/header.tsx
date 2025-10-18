@@ -16,15 +16,13 @@ export default function Header() {
     const [menuOpen, setMenuOpen] = useState(false);
     const pathname = usePathname();
 
-    // 🔔 State global (Zustand)
+    // State global (Zustand)
     const notifications = useNotificationStore((s) => s.notifications);
     const setNotifications = useNotificationStore((s) => s.setNotifications);
     const clearNotifications = useNotificationStore((s) => s.clearNotifications);
 
-    // 🔌 Connexion temps réel (listener)
     useRealtime(userId ?? undefined);
 
-    // 🔄 Charger les notifs persistées en DB quand userId change
     useEffect(() => {
         if (!userId) return;
         (async () => {
@@ -42,7 +40,6 @@ export default function Header() {
         })();
     }, [userId, getToken, setNotifications]);
 
-    // lien actif
     const linkClass = (path: string) =>
         `font-medium transition-colors ${
             pathname === path ? 'text-indigo-400 underline' : 'hover:text-gray-400'
@@ -57,7 +54,6 @@ export default function Header() {
                 </Link>
             </h1>
 
-            {/* Desktop navigation */}
             {isSignedIn ? (
                 <nav className="hidden md:flex items-center gap-8">
                     <Link href="/friend" className={linkClass('/friend')}>
@@ -91,7 +87,6 @@ export default function Header() {
                 </nav>
             )}
 
-            {/* Mobile menu button */}
             <button
                 className="md:hidden p-2 rounded hover:bg-gray-800 transition"
                 aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
@@ -115,13 +110,12 @@ export default function Header() {
                                     Amis
                                 </Link>
                                 <Link
-                                    href="/profile"
-                                    className={linkClass('/profile')}
+                                    href="/messagerie"
+                                    className={linkClass('/messagerie')}
                                     onClick={() => setMenuOpen(false)}
                                 >
                                     Profil
                                 </Link>
-
                                 <Link
                                     href="/offre"
                                     className={linkClass('/offre')}
@@ -130,7 +124,6 @@ export default function Header() {
                                     Nos offres
                                 </Link>
 
-                                {/* 🔔 Cloche aussi en mobile */}
                                 <NotificationBell
                                     count={notifications.length}
                                     notifications={notifications}

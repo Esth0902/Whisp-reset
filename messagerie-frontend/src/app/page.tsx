@@ -54,11 +54,11 @@ export default function HomePage() {
     }
 
     return (
-        <main className="min-h-screen bg-white text-gray-800">
+        <main className="flex-1 bg-white text-gray-800">
             {/* Hero Section */}
-            <section className="text-center py-10 px-6 bg-gradient-to-br from-blue-50 to-white">
-                <h1 className="text-5xl font-extrabold mb-4">Votre messagerie moderne et sécurisée</h1>
-                <p className="text-lg text-gray-600 mb-8">
+            <section className="text-center bg-gradient-to-br from-blue-50 to-white">
+                <h1 className="text-5xl font-extrabold mb-2">Votre messagerie moderne et sécurisée</h1>
+                <p className="text-lg text-gray-600 mb-4">
                     Communiquez facilement avec vos amis, collègues ou clients. Simple, rapide et privé.
                 </p>
 
