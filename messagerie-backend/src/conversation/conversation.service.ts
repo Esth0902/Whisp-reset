@@ -33,7 +33,11 @@ export class ConversationService {
         });
     }
 
-    async createConversation(adminClerkId: string, recipientIds: string[] | string) {
+
+    async createConversation(
+        adminClerkId: string,
+        recipientIds: string[] | string
+    ): Promise<{ id: string; title: string | null }> {
         const ids = Array.isArray(recipientIds) ? recipientIds : [recipientIds];
 
         if (!ids || ids.length === 0) {
