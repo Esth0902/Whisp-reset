@@ -281,19 +281,37 @@ export default function MessengerPage() {
                             ))}
                         </div>
 
-                        <div className="p-4 border-t border-gray-200 flex gap-2 bg-white sticky bottom-0 md:static">
+                        <div className="p-3 border-t border-gray-200 flex items-center gap-2 bg-white sticky bottom-0 md:static">
                             <input
                                 type="text"
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
-                                className="flex-1 border rounded-lg p-2 border-gray-300 focus:outline-none focus:ring focus:ring-indigo-300"
+                                className="flex-1 border rounded-lg p-2 text-sm border-gray-300 focus:outline-none focus:ring focus:ring-indigo-300"
                                 placeholder="Écrire un message..."
                             />
+
                             <button
                                 onClick={sendMessage}
-                                className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 rounded-lg"
+                                className="flex-shrink-0 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg flex items-center justify-center"
+                                aria-label="Envoyer le message"
                             >
-                                Envoyer
+
+                                <span className="hidden sm:inline text-sm font-medium">Envoyer</span>
+
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 sm:hidden"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M5 12h14M12 5l7 7-7 7"
+                                    />
+                                </svg>
                             </button>
                         </div>
                     </>
