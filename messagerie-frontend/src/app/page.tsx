@@ -76,9 +76,14 @@ export default function HomePage() {
                     {syncing ? (
                         <p className="text-gray-500 animate-pulse">Chargement de votre espace personnel...</p>
                     ) : (
-                        <p className="text-xl font-medium">Bienvenue, {displayName} 👋</p>
+                        <div className="flex flex-col justify-start items-center">
+                            <p className="text-xl font-medium text-center px-4">
+                                Bienvenue, {displayName} 👋
+                            </p>
+                        </div>
                     )}
                 </SignedIn>
+
             </section>
 
             {/* Section offres uniquement si non connecté */}

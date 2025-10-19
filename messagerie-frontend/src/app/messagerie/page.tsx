@@ -165,9 +165,12 @@ export default function MessengerPage() {
     );
 
     return (
-        <div className="flex-1 flex bg-gray-50 text-gray-900 min-h-0">
+        <div className="flex-1 flex flex-col md:flex-row bg-gray-50 text-gray-900 min-h-0 overflow-hidden">
             {/* Sidebar */}
-            <aside className="w-1/4 border-r border-gray-200 flex flex-col bg-white">
+            <aside
+                className={`md:w-1/4 w-full md:border-r border-gray-200 flex flex-col bg-white
+                ${activeId ? 'hidden md:flex' : 'flex'}`}
+            >
                 <div className="p-4 border-b border-gray-200">
                     <h2 className="text-lg font-semibold text-gray-800">Mes conversations</h2>
                 </div>
@@ -239,9 +242,21 @@ export default function MessengerPage() {
             </aside>
 
             {/* Zone principale */}
-            <main className="flex-1 flex flex-col bg-gray-100 min-h-0">
+            <main className={`flex-1 flex flex-col bg-gray-100 min-h-0 overflow-hidden ${!activeId ? 'hidden md:flex' : 'flex'}`}>
                 {activeConv ? (
                     <>
+                        <div className="md:hidden flex items-center p-3 border-b border-gray-200 bg-white">
+                            <button
+                                onClick={() => setActiveId(null)}
+                                className="text-indigo-600 font-semibold"
+                            >
+                                ← Retour
+                            </button>
+                            <h2 className="ml-4 text-gray-800 font-medium truncate">
+                                {activeConv?.title || 'Conversation'}
+                            </h2>
+                        </div>
+
                         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
                             {activeConv.messages.map((msg, index) => (
                                 <div
@@ -266,7 +281,7 @@ export default function MessengerPage() {
                             ))}
                         </div>
 
-                        <div className="p-4 border-t border-gray-200 flex gap-2 bg-white">
+                        <div className="p-4 border-t border-gray-200 flex gap-2 bg-white sticky bottom-0 md:static">
                             <input
                                 type="text"
                                 value={newMessage}
