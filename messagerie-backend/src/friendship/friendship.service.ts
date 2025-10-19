@@ -192,5 +192,30 @@ export class FriendshipService {
             },
         });
     }
+
+    async deleteFriend(userClerkId: string, friendClerkId: string) {
+        const userId = await this.resolveUserIdByClerkId(userClerkId);
+        const friendId = await this.resolveUserIdByClerkId(friendClerkId);
+
+        const friendship = await this.prisma.friendship.findFirst({
+            where: {
+                status: 'accepted',
+                OR: [
+                    { userId, friendId },
+                    { userId: friendId, friendId: userId },
+                ],
+            },
+        });
+
+        if (!friendship) {
+            throw new NotFoundException('Amitié non trouvée ou déjà supprimée.');
+        }
+
+        await this.prisma.friendship.delete({
+            where: { id: friendship.id },
+        });
+
+        return { success: true };
+    }
 }
 

@@ -55,7 +55,9 @@ export default function NotificationBell({
             </button>
 
             {open && (
-                <div className="absolute right-0 mt-2 w-72 bg-white shadow-lg rounded p-3 z-50 text-gray-900">
+                <div className="absolute mt-2 bg-white shadow-lg rounded p-3 z-50 text-gray-900
+                               right-0 sm:w-72 w-[90vw] max-w-sm sm:right-0 sm:left-auto left-1/2 sm:translate-x-0 -translate-x-1/2"
+                >
                     <h3 className="font-bold mb-2">Notifications</h3>
 
                     {notifications.length === 0 ? (
@@ -65,12 +67,11 @@ export default function NotificationBell({
                             {notifications.map((n) => (
                                 <li key={n.id} className="text-sm border-b pb-1">
                                     <div className="flex items-center justify-between">
-                                        {/* ✅ Si la notif contient un lien, on rend le message cliquable */}
                                         {n.link ? (
                                             <Link
                                                 href={n.link}
                                                 className="text-blue-600 hover:underline"
-                                                onClick={() => setOpen(false)} // ferme le menu quand on clique
+                                                onClick={() => setOpen(false)}
                                             >
                                                 {n.message}
                                             </Link>

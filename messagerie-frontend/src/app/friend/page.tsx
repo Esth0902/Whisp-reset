@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import FriendInvitationForm from '@/component/friendinvitationform';
 import { useAuth, useUser } from '@clerk/nextjs';
+import toast from 'react-hot-toast';
 
 type User = {
     clerkId: string;
@@ -130,7 +131,6 @@ export default function FriendsPage() {
                         )}
                     </section>
 
-                    {/* Liste des amis */}
                     <section>
                         <h2 className="text-xl font-semibold text-gray-800 mb-4">👫 Vos amis</h2>
                         {friends.length === 0 ? (
@@ -140,13 +140,37 @@ export default function FriendsPage() {
                                 {friends.map((friend) => (
                                     <li
                                         key={friend.clerkId}
-                                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex justify-between items-center"
                                     >
                     <span className="text-gray-800 font-medium">
                       {friend.name?.trim() !== ''
                           ? friend.name
                           : friend.username ?? friend.clerkId}
                     </span>
+                                        <button
+                                            onClick={async () => {
+                                                const confirmed = window.confirm(
+                                                    `Voulez-vous vraiment supprimer l'amitié avec ${friend.name ?? friend.username ?? friend.clerkId} ?`
+                                                );
+                                                if (!confirmed) return;
+                                                try {
+                                                    const token = await getToken();
+                                                    const res = await fetch(`/api/friendships/${friend.clerkId}`, {
+                                                        method: 'DELETE',
+                                                        headers: { Authorization: `Bearer ${token}` },
+                                                });
+                                                if (!res.ok) throw new Error('Erreur lors de la suppression');
+                                                    toast.success(`Amitié avec ${friend.name ?? friend.username ?? friend.clerkId} supprimée`);
+                                                    fetchData();
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    toast.error("Erreur lors de la suppression");
+                                                }
+                                            }}
+                                            className="text-sm text-red-600 hover:underline"
+                                        >
+                                            Supprimer
+                                        </button>
                                     </li>
                                 ))}
                             </ul>

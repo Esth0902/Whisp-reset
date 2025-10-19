@@ -4,6 +4,7 @@ import { CreateFriendshipDto } from './dto/create-friendship.dto';
 import { RespondFriendshipDto } from './dto/respond-friendship.dto';
 import { ClerkAuthGuard } from '../clerk/clerk-auth.guard';
 import { Request } from 'express';
+import { Delete } from '@nestjs/common';
 
 // On définit une interface typée pour les requêtes authentifiées
 interface AuthenticatedRequest extends Request {
@@ -45,5 +46,18 @@ export class FriendshipController {
             throw new Error('User not authenticated');
         }
         return this.friendshipService.getPendingInvitations(userId);
+    }
+
+    @Delete(':clerkId')
+    async deleteFriend(
+        @Req() req: AuthenticatedRequest,
+        @Param('clerkId') friendClerkId: string,
+    ) {
+        const userId = req.clerkUserId;
+        if (!userId) {
+            throw new Error('User not authenticated');
+        }
+
+        return this.friendshipService.deleteFriend(userId, friendClerkId);
     }
 }

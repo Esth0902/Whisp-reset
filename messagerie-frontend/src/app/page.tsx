@@ -54,9 +54,9 @@ export default function HomePage() {
     }
 
     return (
-        <main className="flex-1 bg-white text-gray-800">
+        <main className="flex-1 bg-white text-gray-800 min-h-0 overflow-hidden">
             {/* Hero Section */}
-            <section className="text-center bg-gradient-to-br from-blue-50 to-white">
+            <section className="text-center bg-gradient-to-br from-blue-50 to-white px-4 py-10 overflow-hidden">
                 <h1 className="text-5xl font-extrabold mb-2">Votre messagerie moderne et sécurisée</h1>
                 <p className="text-lg text-gray-600 mb-4">
                     Communiquez facilement avec vos amis, collègues ou clients. Simple, rapide et privé.
@@ -82,9 +82,7 @@ export default function HomePage() {
             </section>
 
             {/* Section offres uniquement si non connecté */}
-            <SignedOut>
-                <Pricing />
-            </SignedOut>
+            {!isSignedIn && <Pricing />}
         </main>
     );
 }

@@ -59,7 +59,7 @@ export default function Header() {
                     <Link href="/friend" className={linkClass('/friend')}>
                         Amis
                     </Link>
-                    <Link href="/messagerie" className={linkClass('/profile')}>
+                    <Link href="/messagerie" className={linkClass('/messagerie')}>
                         Messagerie
                     </Link>
                     <Link href="/offre" className={linkClass('/offre')}>
@@ -114,7 +114,7 @@ export default function Header() {
                                     className={linkClass('/messagerie')}
                                     onClick={() => setMenuOpen(false)}
                                 >
-                                    Profil
+                                    Messagerie
                                 </Link>
                                 <Link
                                     href="/offre"
