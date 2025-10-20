@@ -80,8 +80,16 @@ export default function HomePage() {
                             <p className="text-xl font-medium text-center px-4">
                                 Bienvenue, {displayName} 👋
                             </p>
+
+
+                            <img
+                                src="/whisp.png"
+                                alt="Illustration Whisp"
+                                className="mt-6 w-full max-w-lg rounded-lg shadow-lg opacity-80 transition-opacity duration-1000"/>
+
                         </div>
                     )}
+
                 </SignedIn>
 
             </section>
