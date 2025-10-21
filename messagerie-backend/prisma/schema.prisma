@@ -16,7 +16,7 @@ datasource db {
 
 model User {
   id            String             @id @default(cuid())
-  clerkId       String             @unique // Identifiant Clerk unique pour liaison
+  clerkId       String             @unique
   email         String             @unique
   name          String?            @unique
   conversations ConversationUser[]
