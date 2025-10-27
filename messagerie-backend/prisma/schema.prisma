@@ -18,7 +18,7 @@ model User {
   id            String             @id @default(cuid())
   clerkId       String             @unique
   email         String             @unique
-  name          String?            @unique
+  name          String             @unique
   conversations ConversationUser[]
   messages      Message[]
   friendships   Friendship[]       @relation("userFriends")
