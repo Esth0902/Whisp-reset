@@ -79,15 +79,15 @@ npm install
 Créer un fichier .env dans chaque dossier :
 
 #### - Backend (.env)
-DATABASE_URL="ta_database"
-CLERK_SECRET_KEY="ta_clé_clerk"
-CLERK_ISSUER="ton_issuer_clerk"
+- DATABASE_URL="ta_database"
+- CLERK_SECRET_KEY="ta_clé_clerk"
+- CLERK_ISSUER="ton_issuer_clerk"
 
 #### - Frontend (.env.local)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="ta_clé_clerk"
-NEXT_PUBLIC_API_URL="http://localhost:3000" (local)
-NEXT_PUBLIC_SOCKET_URL="http://localhost:4000" (local)
-CLERK_SECRET_KEY="ta_clé_clerk"
+- NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="ta_clé_clerk"
+- NEXT_PUBLIC_API_URL="http://localhost:3000" (local)
+- NEXT_PUBLIC_SOCKET_URL="http://localhost:4000" (local)
+- CLERK_SECRET_KEY="ta_clé_clerk"
 
 ### 4️⃣ Lancer le projet
 #### - Backend (.env)
